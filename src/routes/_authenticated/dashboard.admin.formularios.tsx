@@ -38,14 +38,17 @@ function AdminFormularios() {
       }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
       if (error) throw error;
       if (args.status === "approved" && fdata?.cargo_desejado_id) {
-        // Encontra o cargo "Auxiliar" (slug 'auxiliar') se for o fluxo de REC
-        const { data: recCargo } = await supabase.from("cargos").select("id").eq("slug", "auxiliar").maybeSingle();
-        
+        // Encontra o cargo desejado pelo membro no formulário
         await supabase.from("profiles").update({
-          cargo_id: recCargo?.id ?? fdata.cargo_desejado_id,
+          cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved"
+        }).eq("id", args.user_id);
+      } else if (args.status === "rejected") {
+        await supabase.from("profiles").update({
+          form_status: "rejected",
+          status: "pending"
         }).eq("id", args.user_id);
       }
       await supabase.from("notifications").insert({

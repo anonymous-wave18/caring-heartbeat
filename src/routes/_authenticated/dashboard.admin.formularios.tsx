@@ -37,8 +37,8 @@ function AdminFormularios() {
         status: args.status, reviewed_at: new Date().toISOString(), review_notes: args.notes ?? null,
       }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
       if (error) throw error;
+
       if (args.status === "approved" && fdata?.cargo_desejado_id) {
-        // Encontra o cargo desejado pelo membro no formulário
         await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
@@ -51,6 +51,16 @@ function AdminFormularios() {
           status: "pending"
         }).eq("id", args.user_id);
       }
+
+      // Log action
+      await supabase.from("audit_log").insert({
+        actor_id: meQ.data?.id,
+        action: `form.${args.status}`,
+        entity: "recruitment_forms",
+        entity_id: args.id,
+        metadata: { notes: args.notes }
+      });
+
       await supabase.from("notifications").insert({
         user_id: args.user_id, type: "form",
         title: args.status === "approved" ? "Formulário aprovado!" : "Formulário recusado",

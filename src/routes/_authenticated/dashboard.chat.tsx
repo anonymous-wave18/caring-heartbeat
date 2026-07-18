@@ -7,7 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
 
+import { z } from "zod";
+
 export const Route = createFileRoute("/_authenticated/dashboard/chat")({
+  validateSearch: (search) => z.object({ thread_id: z.string().optional() }).parse(search),
   component: ChatPage,
 });
 
@@ -80,9 +83,8 @@ function ChatPage() {
     }
   }, [userId, isStaff, threadsQ.data, qc]);
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const threadFromUrl = searchParams.get("thread");
-  const [selected, setSelected] = useState<string | null>(threadFromUrl);
+  const { thread_id: threadFromUrl } = Route.useSearch();
+  const [selected, setSelected] = useState<string | null>(threadFromUrl ?? null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {

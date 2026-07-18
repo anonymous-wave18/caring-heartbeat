@@ -5,7 +5,7 @@ import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Tras
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
-import { useAvatarUrl, AvatarImage } from "@/lib/useAvatarUrl";
+import { useAvatarUrl } from "@/lib/useAvatarUrl";
 
 export const Route = createFileRoute("/_authenticated/dashboard/chat")({
   component: ChatPage,

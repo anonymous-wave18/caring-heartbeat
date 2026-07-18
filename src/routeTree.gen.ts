@@ -25,6 +25,10 @@ import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardMasterIndexRouteImport } from './routes/_authenticated/dashboard.master.index'
 import { Route as AuthenticatedDashboardDonoIndexRouteImport } from './routes/_authenticated/dashboard.dono.index'
 import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
+import { Route as AuthenticatedDashboardMasterUsersRouteImport } from './routes/_authenticated/dashboard.master.users'
+import { Route as AuthenticatedDashboardMasterSettingsRouteImport } from './routes/_authenticated/dashboard.master.settings'
+import { Route as AuthenticatedDashboardMasterSecurityRouteImport } from './routes/_authenticated/dashboard.master.security'
+import { Route as AuthenticatedDashboardMasterOrganizationsRouteImport } from './routes/_authenticated/dashboard.master.organizations'
 import { Route as AuthenticatedDashboardDonoRepassesRouteImport } from './routes/_authenticated/dashboard.dono.repasses'
 import { Route as AuthenticatedDashboardDonoPermissoesRouteImport } from './routes/_authenticated/dashboard.dono.permissoes'
 import { Route as AuthenticatedDashboardDonoDatabaseRouteImport } from './routes/_authenticated/dashboard.dono.database'
@@ -128,6 +132,30 @@ const AuthenticatedDashboardAdminIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardMasterUsersRoute =
+  AuthenticatedDashboardMasterUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthenticatedDashboardMasterRoute,
+  } as any)
+const AuthenticatedDashboardMasterSettingsRoute =
+  AuthenticatedDashboardMasterSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedDashboardMasterRoute,
+  } as any)
+const AuthenticatedDashboardMasterSecurityRoute =
+  AuthenticatedDashboardMasterSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => AuthenticatedDashboardMasterRoute,
+  } as any)
+const AuthenticatedDashboardMasterOrganizationsRoute =
+  AuthenticatedDashboardMasterOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => AuthenticatedDashboardMasterRoute,
+  } as any)
 const AuthenticatedDashboardDonoRepassesRoute =
   AuthenticatedDashboardDonoRepassesRouteImport.update({
     id: '/repasses',
@@ -219,6 +247,10 @@ export interface FileRoutesByFullPath {
   '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
   '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
+  '/dashboard/master/security': typeof AuthenticatedDashboardMasterSecurityRoute
+  '/dashboard/master/settings': typeof AuthenticatedDashboardMasterSettingsRoute
+  '/dashboard/master/users': typeof AuthenticatedDashboardMasterUsersRoute
   '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
   '/dashboard/master/': typeof AuthenticatedDashboardMasterIndexRoute
@@ -243,6 +275,10 @@ export interface FileRoutesByTo {
   '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
   '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
+  '/dashboard/master/security': typeof AuthenticatedDashboardMasterSecurityRoute
+  '/dashboard/master/settings': typeof AuthenticatedDashboardMasterSettingsRoute
+  '/dashboard/master/users': typeof AuthenticatedDashboardMasterUsersRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/dono': typeof AuthenticatedDashboardDonoIndexRoute
   '/dashboard/master': typeof AuthenticatedDashboardMasterIndexRoute
@@ -273,6 +309,10 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
   '/_authenticated/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/_authenticated/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/_authenticated/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
+  '/_authenticated/dashboard/master/security': typeof AuthenticatedDashboardMasterSecurityRoute
+  '/_authenticated/dashboard/master/settings': typeof AuthenticatedDashboardMasterSettingsRoute
+  '/_authenticated/dashboard/master/users': typeof AuthenticatedDashboardMasterUsersRoute
   '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/_authenticated/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
   '/_authenticated/dashboard/master/': typeof AuthenticatedDashboardMasterIndexRoute
@@ -303,6 +343,10 @@ export interface FileRouteTypes {
     | '/dashboard/dono/database'
     | '/dashboard/dono/permissoes'
     | '/dashboard/dono/repasses'
+    | '/dashboard/master/organizations'
+    | '/dashboard/master/security'
+    | '/dashboard/master/settings'
+    | '/dashboard/master/users'
     | '/dashboard/admin/'
     | '/dashboard/dono/'
     | '/dashboard/master/'
@@ -327,6 +371,10 @@ export interface FileRouteTypes {
     | '/dashboard/dono/database'
     | '/dashboard/dono/permissoes'
     | '/dashboard/dono/repasses'
+    | '/dashboard/master/organizations'
+    | '/dashboard/master/security'
+    | '/dashboard/master/settings'
+    | '/dashboard/master/users'
     | '/dashboard/admin'
     | '/dashboard/dono'
     | '/dashboard/master'
@@ -356,6 +404,10 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/dono/database'
     | '/_authenticated/dashboard/dono/permissoes'
     | '/_authenticated/dashboard/dono/repasses'
+    | '/_authenticated/dashboard/master/organizations'
+    | '/_authenticated/dashboard/master/security'
+    | '/_authenticated/dashboard/master/settings'
+    | '/_authenticated/dashboard/master/users'
     | '/_authenticated/dashboard/admin/'
     | '/_authenticated/dashboard/dono/'
     | '/_authenticated/dashboard/master/'
@@ -480,6 +532,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/admin/'
       preLoaderRoute: typeof AuthenticatedDashboardAdminIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/master/users': {
+      id: '/_authenticated/dashboard/master/users'
+      path: '/users'
+      fullPath: '/dashboard/master/users'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterUsersRouteImport
+      parentRoute: typeof AuthenticatedDashboardMasterRoute
+    }
+    '/_authenticated/dashboard/master/settings': {
+      id: '/_authenticated/dashboard/master/settings'
+      path: '/settings'
+      fullPath: '/dashboard/master/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterSettingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMasterRoute
+    }
+    '/_authenticated/dashboard/master/security': {
+      id: '/_authenticated/dashboard/master/security'
+      path: '/security'
+      fullPath: '/dashboard/master/security'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterSecurityRouteImport
+      parentRoute: typeof AuthenticatedDashboardMasterRoute
+    }
+    '/_authenticated/dashboard/master/organizations': {
+      id: '/_authenticated/dashboard/master/organizations'
+      path: '/organizations'
+      fullPath: '/dashboard/master/organizations'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterOrganizationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMasterRoute
     }
     '/_authenticated/dashboard/dono/repasses': {
       id: '/_authenticated/dashboard/dono/repasses'
@@ -624,11 +704,23 @@ const AuthenticatedDashboardDonoRouteWithChildren =
   )
 
 interface AuthenticatedDashboardMasterRouteChildren {
+  AuthenticatedDashboardMasterOrganizationsRoute: typeof AuthenticatedDashboardMasterOrganizationsRoute
+  AuthenticatedDashboardMasterSecurityRoute: typeof AuthenticatedDashboardMasterSecurityRoute
+  AuthenticatedDashboardMasterSettingsRoute: typeof AuthenticatedDashboardMasterSettingsRoute
+  AuthenticatedDashboardMasterUsersRoute: typeof AuthenticatedDashboardMasterUsersRoute
   AuthenticatedDashboardMasterIndexRoute: typeof AuthenticatedDashboardMasterIndexRoute
 }
 
 const AuthenticatedDashboardMasterRouteChildren: AuthenticatedDashboardMasterRouteChildren =
   {
+    AuthenticatedDashboardMasterOrganizationsRoute:
+      AuthenticatedDashboardMasterOrganizationsRoute,
+    AuthenticatedDashboardMasterSecurityRoute:
+      AuthenticatedDashboardMasterSecurityRoute,
+    AuthenticatedDashboardMasterSettingsRoute:
+      AuthenticatedDashboardMasterSettingsRoute,
+    AuthenticatedDashboardMasterUsersRoute:
+      AuthenticatedDashboardMasterUsersRoute,
     AuthenticatedDashboardMasterIndexRoute:
       AuthenticatedDashboardMasterIndexRoute,
   }

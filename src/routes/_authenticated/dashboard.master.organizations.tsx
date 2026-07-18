@@ -16,7 +16,7 @@ function OrgsPage() {
   const q = useQuery({
     queryKey: ["orgs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations" as any).select("*").order("created_at", { ascending: false });
+      const { data, error } = await (supabase.from("organizations" as any) as any).select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Org[];
     },

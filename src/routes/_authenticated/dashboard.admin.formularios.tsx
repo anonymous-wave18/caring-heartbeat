@@ -38,13 +38,14 @@ function AdminFormularios() {
         status: args.status, 
         reviewed_at: new Date().toISOString(), 
         review_notes: args.notes ?? null,
-      }).eq("id", args.id).select("cargo_desejado_id").single();
+      }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
       
       if (fErr) throw fErr;
+      if (!fdata) throw new Error("Formulário não encontrado");
 
-      if (args.status === "approved") {
-        // 2. Get cargo details to check if it's an admin role
-        const { data: cargoData } = await supabase.from("cargos").select("is_staff").eq("id", fdata.cargo_desejado_id).maybeSingle();
+      if (args.status === "approved" && fdata.cargo_desejado_id) {
+        // 2. Get cargo details by ID
+        const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
 
         // 3. Update profile
         const { error: pErr } = await supabase.from("profiles").update({
@@ -55,19 +56,14 @@ function AdminFormularios() {
         }).eq("id", args.user_id);
         if (pErr) throw pErr;
 
-        // 4. Update user_roles if it's a staff cargo
-        if (cargoData?.is_staff) {
-          await supabase.from("user_roles").upsert({ 
-            user_id: args.user_id, 
-            role: "admin" 
-          }, { onConflict: "user_id,role" });
-        } else {
-          // Default to member role
-          await supabase.from("user_roles").upsert({ 
-            user_id: args.user_id, 
-            role: "member" 
-          }, { onConflict: "user_id,role" });
-        }
+        // 4. Update user_roles based on slug or default
+        // If slug contains 'rec' or 'admin', we give them admin role
+        const isStaffCargo = cargoData?.slug?.toLowerCase().includes("rec") || cargoData?.slug?.toLowerCase().includes("admin");
+        
+        await supabase.from("user_roles").upsert({ 
+          user_id: args.user_id, 
+          role: isStaffCargo ? "admin" : "member" 
+        }, { onConflict: "user_id,role" });
       } else {
         await supabase.from("profiles").update({
           form_status: "rejected",

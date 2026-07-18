@@ -33,34 +33,64 @@ function AdminFormularios() {
 
   const reviewMut = useMutation({
     mutationFn: async (args: { id: string; user_id: string; status: "approved" | "rejected"; notes?: string }) => {
-      const { data: fdata, error } = await supabase.from("recruitment_forms").update({
-        status: args.status, reviewed_at: new Date().toISOString(), review_notes: args.notes ?? null,
+      // 1. Update form status and get the desired cargo
+      const { data: fdata, error: fErr } = await supabase.from("recruitment_forms").update({
+        status: args.status, 
+        reviewed_at: new Date().toISOString(), 
+        review_notes: args.notes ?? null,
       }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
-      if (error) throw error;
+      
+      if (fErr) throw fErr;
+      if (!fdata) throw new Error("Formulário não encontrado");
 
-      if (args.status === "approved" && fdata?.cargo_desejado_id) {
-        await supabase.from("profiles").update({
+      if (args.status === "approved" && fdata.cargo_desejado_id) {
+        // 2. Get form details for syncing
+        const { data: formDetails } = await supabase.from("recruitment_forms").select("*").eq("id", args.id).single();
+        // 3. Get cargo details
+        const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
+
+        // 4. Update profile with info from form
+        const { error: pErr } = await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
-          status: "approved"
+          status: "approved",
+          first_name: formDetails?.full_name?.split(" ")[0] || null,
+          last_name: formDetails?.full_name?.split(" ").slice(1).join(" ") || null,
+          avatar_url: formDetails?.discord_avatar_url || null,
+          pix_key: formDetails?.bank_name || null, // Fallback or dedicated field? User mentioned PIX.
         }).eq("id", args.user_id);
-      } else if (args.status === "rejected") {
+        if (pErr) throw pErr;
+
+        // 5. Update user_roles based on slug or default
+        const isStaffCargo = cargoData?.slug?.toLowerCase().includes("rec") || cargoData?.slug?.toLowerCase().includes("admin");
+        
+        await supabase.from("user_roles").upsert({ 
+          user_id: args.user_id, 
+          role: isStaffCargo ? "admin" : "member" 
+        }, { onConflict: "user_id,role" });
+      } else {
         await supabase.from("profiles").update({
           form_status: "rejected",
           status: "pending"
         }).eq("id", args.user_id);
       }
 
-      // Log action
+      // 5. Log action with device info
       await supabase.from("audit_log").insert({
         actor_id: meQ.data?.id,
         action: `form.${args.status}`,
         entity: "recruitment_forms",
         entity_id: args.id,
-        metadata: { notes: args.notes }
+        metadata: { 
+          notes: args.notes,
+          user_id: args.user_id,
+          ua: navigator.userAgent,
+          platform: navigator.platform
+        }
       });
 
+      // 6. Notify user
       await supabase.from("notifications").insert({
         user_id: args.user_id, type: "form",
         title: args.status === "approved" ? "Formulário aprovado!" : "Formulário recusado",

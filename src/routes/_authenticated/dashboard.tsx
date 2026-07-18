@@ -35,6 +35,8 @@ export type Profile = {
   pix_key: string | null;
   pix_key_type: string | null;
   pix_beneficiary: string | null;
+  cargo_id: string | null;
+  recruited_by: string | null;
   created_at: string;
 };
 

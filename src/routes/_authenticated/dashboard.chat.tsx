@@ -117,6 +117,8 @@ function ChatPage() {
                 label = displayName(memberProf);
               } else if (!isStaff) {
                 label = "Suporte Administrativo";
+              } else if (isStaff && !memberProf && t.member_id) {
+                 label = "Membro Desconhecido";
               }
             }
 
@@ -259,7 +261,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   <div className="whitespace-pre-wrap break-words">{m.body}</div>
                   <div className={`mt-0.5 flex items-center justify-between gap-2 text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                     <span>{new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                    {isMe && <span className="opacity-0 group-hover/msg:opacity-100 transition-opacity">Lido</span>}
+                    {isMe && <span className="opacity-0 group-hover/msg:opacity-100 transition-opacity">Entregue</span>}
                   </div>
                 </div>
                 
@@ -294,12 +296,17 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
       </div>
       <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(); }}
         className="flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
-        <button type="button" className="p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-primary/5 transition-colors" title="Gravar áudio">
+        <button type="button" className="p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-primary/5 transition-colors" title="Gravar áudio" onMouseDown={() => toast.info("Segure para gravar (simulado)")}>
           <Mic className="size-5" />
         </button>
-        <div className="relative flex-1">
+        <div className="relative flex-1 group/input">
           <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input pr-10" />
           <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
+          
+          {/* Swipe UI simulator placeholder */}
+          <div className="absolute -top-8 left-0 hidden group-focus-within/input:block text-[10px] text-muted-foreground animate-bounce">
+            Arrasta para responder (simulado)
+          </div>
         </div>
         <button type="submit" disabled={!text.trim() || sendMut.isPending}
           className="inline-flex items-center gap-1 rounded-full bg-primary p-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-primary/20">

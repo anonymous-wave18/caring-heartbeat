@@ -18,7 +18,7 @@ function AdminDocumentos() {
       const { data, error } = await supabase.from("recruitment_documents")
         .select(`
           id, user_id, file_path, file_name, kind, created_at,
-          profiles(first_name, last_name, email)
+          profiles:user_id(first_name, last_name, email)
         `)
         .order("created_at", { ascending: false });
       if (error) {
@@ -42,6 +42,18 @@ function AdminDocumentos() {
   }, [docsQ.data, q]);
 
   async function download(path: string, name: string) {
+    // Audit log for sensitive data access
+    const { data: me } = await supabase.auth.getUser();
+    if (me.user) {
+      await supabase.from("audit_log").insert({
+        actor_id: me.user.id,
+        action: "document.view",
+        entity: "recruitment_documents",
+        entity_id: path, // using path as id identifier here or we could find id
+        metadata: { file_name: name, ua: navigator.userAgent }
+      });
+    }
+
     const { data } = await supabase.storage.from("documents").createSignedUrl(path, 60);
     if (data?.signedUrl) { const a = document.createElement("a"); a.href = data.signedUrl; a.download = name; a.target = "_blank"; a.click(); }
   }

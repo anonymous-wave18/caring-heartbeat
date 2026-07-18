@@ -79,6 +79,12 @@ function AdminPage() {
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" />
+        <MetricCard label="Formulários Pendentes" value={counts.pending} trend="ação requerida" highlight />
+        <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} />
+      </div>
+
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-medium tracking-tight">Cadastros</h1>
@@ -212,6 +218,18 @@ function AdminPage() {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, trend, highlight }: { label: string; value: string | number; trend?: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-xl p-5 ring-1 ${highlight ? "bg-primary/5 ring-primary/20" : "bg-surface ring-border"}`}>
+      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <div className="text-3xl font-bold tracking-tight">{value}</div>
+        {trend && <div className={`text-[10px] font-medium ${highlight ? "text-primary" : "text-success"}`}>{trend}</div>}
       </div>
     </div>
   );

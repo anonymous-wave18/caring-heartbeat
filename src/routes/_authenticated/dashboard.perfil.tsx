@@ -308,8 +308,8 @@ function AchievementsSection({ userId }: { userId: string }) {
   const achQuery = useQuery({
     queryKey: ["user-achievements", userId],
     queryFn: async () => {
-      // Mock data for now until table is created by user
-      const { data, error } = await supabase.from("user_achievements")
+      // Use any to bypass TS until schema is synced
+      const { data, error } = await (supabase.from("user_achievements" as any) as any)
         .select("*, achievements(*)")
         .eq("user_id", userId);
       

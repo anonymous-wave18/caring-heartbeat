@@ -151,6 +151,9 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   });
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<any>(null);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   const senderIds = (msgsQ.data ?? []).map((m) => m.sender_id);
   const profsQ = useProfilesBasic(senderIds);

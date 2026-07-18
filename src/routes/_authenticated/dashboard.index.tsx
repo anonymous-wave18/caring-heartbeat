@@ -77,7 +77,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
   });
   const nextPaymentQ = useQuery({
     queryKey: ["my-next-payment", userId],
-    enabled: profile.form_status === "approved",
+    enabled: profile.form_status === "approved" || profile.status === "approved",
     queryFn: async () => {
       const { data } = await supabase.from("payments").select("*").eq("user_id", userId)
         .in("status", ["pending", "submitted", "overdue"]).order("week_start", { ascending: false }).limit(1).maybeSingle();
@@ -100,22 +100,22 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
       <div className="grid gap-4 md:grid-cols-3">
         <Card icon={CheckCircle2} label="Status" value="Ativo" tint="success" />
         <Card icon={FileText} label="Formulário" value={
-          profile.form_status === "approved" ? "Aprovado"
+          profile.form_status === "approved" || profile.status === "approved" ? "Aprovado"
           : profile.form_status === "submitted" ? "Em análise"
           : profile.form_status === "rejected" ? "Recusado" : "Não enviado"
         } />
         <Card icon={CreditCard} label="Pagamento semanal"
-          value={profile.form_status === "approved"
+          value={profile.form_status === "approved" || profile.status === "approved"
             ? (nextPaymentQ.data ? `${daysLeft !== null && daysLeft >= 0 ? `${daysLeft} dias para pagar` : daysLeft !== null ? "Vencido" : "Aguardando"} · ${formatBRL(nextPaymentQ.data.amount)}` : "Em dia")
             : "Bloqueado"} />
       </div>
 
-      {profile.form_status !== "approved" && (
+      {profile.form_status !== "approved" && profile.status !== "approved" && (
         <ActionCard to="/dashboard/formulario" icon={FileText} title="Complete seu formulário"
           desc="Necessário para liberar pagamentos e chat completo." />
       )}
 
-      {profile.form_status === "approved" && nextPaymentQ.data && (
+      {(profile.form_status === "approved" || profile.status === "approved") && nextPaymentQ.data && (
         <div className="rounded-xl bg-primary/5 p-6 ring-1 ring-primary/20 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
@@ -138,7 +138,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {profile.form_status === "approved" && (
+        {(profile.form_status === "approved" || profile.status === "approved") && (
           <ActionCard to="/dashboard/pagamentos" icon={CreditCard} title="Pagamentos" desc="Envie comprovantes e veja próximas cobranças." />
         )}
         <ActionCard to="/dashboard/chat" icon={MessageSquare} title="Chat" desc="Fale com a Malta em tempo real." />

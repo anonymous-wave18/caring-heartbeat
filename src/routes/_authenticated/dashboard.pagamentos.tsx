@@ -161,6 +161,23 @@ function PagamentosPage() {
         </div>
       )}
 
+      {/* Seção Repasse (Apenas para Admins/Recrutadores) */}
+      {rp && (
+        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-4 border-l-4 border-primary">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium">💰 Enviar Repasse (PIX)</h2>
+            <span className="text-xs text-muted-foreground">Envie o PIX para o Dono após receber de seus recrutados</span>
+          </div>
+          <div className="rounded-md bg-background/50 p-4 text-sm space-y-2">
+            <p>Se você recebeu o pagamento de seus recrutados, realize o repasse para a chave do Dono e anexe o comprovante abaixo.</p>
+            <div className="mt-2 text-xs font-mono text-primary bg-primary/5 p-2 rounded">
+              Chave PIX Dono (Exemplo): cnpj 00.000.000/0001-00
+            </div>
+          </div>
+          <UploadProofButton onFile={(f) => toast.info("Funcionalidade de Repasse sendo processada pelo Dono.")} pending={false} />
+        </section>
+      )}
+
       <section className="rounded-lg bg-surface ring-1 ring-border">
         <div className="border-b border-border px-6 py-3 text-sm font-medium">Histórico</div>
         <ul className="divide-y divide-border">

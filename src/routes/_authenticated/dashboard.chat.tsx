@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 
@@ -206,34 +206,49 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);
           return (
-            <div key={m.id} className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
-                <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground">
+                <button 
+                  onClick={() => window.location.href = `/dashboard/perfil?id=${m.sender_id}`}
+                  className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all"
+                >
                   {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
-                </div>
+                </button>
               )}
-              <div className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-3 py-2 text-sm ${
-                isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"
-              }`}>
-                {!isMe && (
-                  <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                    <span className="text-foreground/80">{displayName(p)}</span>
-                    {p?.is_staff && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
-                        <Shield className="size-2.5" /> ADM
-                      </span>
-                    )}
+              <div className="relative group/msg max-w-[85%] sm:max-w-[75%]">
+                <div className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                  isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"
+                }`}>
+                  {!isMe && (
+                    <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
+                      <span className="text-foreground/80">{displayName(p)}</span>
+                      {p?.is_staff && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
+                          <Shield className="size-2.5" /> ADM
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                  <div className={`mt-0.5 flex items-center justify-between gap-2 text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    <span>{new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    {isMe && <span className="opacity-0 group-hover/msg:opacity-100 transition-opacity">Lido</span>}
                   </div>
-                )}
-                <div className="whitespace-pre-wrap break-words">{m.body}</div>
-                <div className={`mt-0.5 text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                  {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+                
+                {/* Ações de mensagem (simuladas UI) */}
+                <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1`}>
+                   <button className="p-1 hover:bg-surface-muted rounded text-muted-foreground"><ArrowLeft className="size-3" /></button>
+                   {isMe && <button className="p-1 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground"><Trash2 className="size-3" /></button>}
                 </div>
               </div>
               {isMe && (
-                <div className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary">
+                <button 
+                  onClick={() => window.location.href = `/dashboard/perfil`}
+                  className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary hover:ring-primary transition-all"
+                >
                   {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
-                </div>
+                </button>
               )}
             </div>
           );

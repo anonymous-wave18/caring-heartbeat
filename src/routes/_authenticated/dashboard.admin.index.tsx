@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Search, Trash2, Loader2 } from "lucide-react";
+import { Check, X, Search, Trash2, Loader2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
 
@@ -173,6 +173,23 @@ function AdminPage() {
                     title="Excluir"
                   >
                     <Trash2 className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const csv = "ID,Nome,Email,Status,Formulario\n" + filtered.map(m => `${m.id},${m.first_name} ${m.last_name},${m.email},${m.status},${m.form_status}`).join("\n");
+                      const blob = new Blob([csv], { type: 'text/csv' });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.setAttribute('hidden', '');
+                      a.setAttribute('href', url);
+                      a.setAttribute('download', 'membros.csv');
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-2 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
+                  >
+                    <Download className="size-3" /> CSV
                   </button>
                 </div>
               </div>

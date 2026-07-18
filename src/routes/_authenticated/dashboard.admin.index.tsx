@@ -191,20 +191,21 @@ function AdminPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const csv = "ID,Nome,Email,Status,Formulario\n" + filtered.map(m => `${m.id},${m.first_name} ${m.last_name},${m.email},${m.status},${m.form_status}`).join("\n");
+                      const csv = "ID,Nome,Email,Status,Formulario,PIX_Chave,PIX_Tipo,PIX_Beneficiario\n" + filtered.map(m => `${m.id},${m.first_name} ${m.last_name},${m.email},${m.status},${m.form_status},${m.pix_key ?? ""},${m.pix_key_type ?? ""},${m.pix_beneficiary ?? ""}`).join("\n");
                       const blob = new Blob([csv], { type: 'text/csv' });
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.setAttribute('hidden', '');
                       a.setAttribute('href', url);
-                      a.setAttribute('download', 'membros.csv');
+                      a.setAttribute('download', 'membros_malta.csv');
                       document.body.appendChild(a);
                       a.click();
                       document.body.removeChild(a);
                     }}
                     className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-2 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
+                    title="Exportar Membros e PIXs"
                   >
-                    <Download className="size-3" /> CSV
+                    <Download className="size-3" /> Exportar
                   </button>
                 </div>
               </div>

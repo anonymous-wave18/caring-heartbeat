@@ -409,22 +409,7 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
 
   const startDMMut = useMutation({
     mutationFn: async () => {
-      const { data: existing } = await supabase.from("chat_threads")
-        .select("id")
-        .eq("kind", "direct")
-        .eq("member_id", profile.id)
-        .maybeSingle();
-
-      if (existing) {
-        window.location.href = `/dashboard/chat?thread=${existing.id}`;
-      } else {
-        const { data: created } = await supabase.from("chat_threads").insert({
-          kind: "direct",
-          member_id: profile.id,
-          title: `DM: ${profile.first_name}`
-        }).select("id").single();
-        if (created) window.location.href = `/dashboard/chat?thread=${created.id}`;
-      }
+      window.location.href = `/dashboard/chat?thread_id=dm:${profile.id}`;
     }
   });
 

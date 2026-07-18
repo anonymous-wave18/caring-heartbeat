@@ -80,10 +80,15 @@ function ChatPage() {
     }
   }, [userId, isStaff, threadsQ.data, qc]);
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const searchParams = new URLSearchParams(window.location.search);
+  const threadFromUrl = searchParams.get("thread");
+  const [selected, setSelected] = useState<string | null>(threadFromUrl);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   useEffect(() => {
-    if (!selected && threadsQ.data && threadsQ.data.length > 0) setSelected(threadsQ.data[0].id);
+    if (!selected && threadsQ.data && threadsQ.data.length > 0) {
+      setSelected(threadsQ.data[0].id);
+    }
   }, [threadsQ.data, selected]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
@@ -116,9 +121,9 @@ function ChatPage() {
               if (isStaff && memberProf) {
                 label = displayName(memberProf);
               } else if (!isStaff) {
-                label = "Suporte Malta";
+                 label = "Suporte Malta";
               } else if (isStaff && !memberProf && t.member_id) {
-                 label = "Recruta Aguardando";
+                 label = "Aguardando Contato";
               }
             }
 
@@ -129,7 +134,7 @@ function ChatPage() {
                     selected === t.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-surface-muted"
                   }`}>
                   <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[10px]">
-                    {t.kind === "general" ? <Hash className="size-4" /> : (memberProf?.avatar_url ? <img src={memberProf.avatar_url} alt="" className="size-full object-cover" /> : <UserIcon className="size-4" />)}
+                    {t.kind === "general" ? <Hash className="size-4" /> : <AvatarImage path={memberProf?.avatar_url} fallback={initials(memberProf)} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{label}</div>
@@ -250,7 +255,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
                 <button 
-                  onClick={() => window.location.href = `/dashboard/perfil?id=${m.sender_id}`}
+                  onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
                   <AvatarImage path={p?.avatar_url} fallback={initials(p)} />

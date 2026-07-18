@@ -252,7 +252,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
       </div>
       <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(); }}
         className="flex gap-2 border-t border-border p-2 sm:p-3">
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Digite uma mensagem…" className="input" />
+        <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input" />
         <button type="submit" disabled={!text.trim() || sendMut.isPending}
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
           <Send className="size-4" />

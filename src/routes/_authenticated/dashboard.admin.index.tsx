@@ -319,8 +319,8 @@ function MetricCard({ label, value, trend, highlight, icon }: { label: string; v
   return (
     <div className={`rounded-xl p-5 ring-1 ${highlight ? "bg-primary/5 ring-primary/20" : "bg-surface ring-border"}`}>
       <div className="flex items-center justify-between">
-        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-        {icon && <div className="text-muted-foreground opacity-50">{icon}</div>}
+        <div className="text-xs font-semibold uppercase tracking-widest text-primary/80">{label}</div>
+        {icon && <div className="text-primary/40">{icon}</div>}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
         <div className="text-3xl font-bold tracking-tight">{value}</div>

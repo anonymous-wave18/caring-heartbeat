@@ -9,38 +9,356 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardPerfilRouteImport } from './routes/_authenticated/dashboard.perfil'
+import { Route as AuthenticatedDashboardPagamentosRouteImport } from './routes/_authenticated/dashboard.pagamentos'
+import { Route as AuthenticatedDashboardFormularioRouteImport } from './routes/_authenticated/dashboard.formulario'
+import { Route as AuthenticatedDashboardDonoRouteImport } from './routes/_authenticated/dashboard.dono'
+import { Route as AuthenticatedDashboardChatRouteImport } from './routes/_authenticated/dashboard.chat'
+import { Route as AuthenticatedDashboardAvisosRouteImport } from './routes/_authenticated/dashboard.avisos'
+import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
+import { Route as AuthenticatedDashboardDonoIndexRouteImport } from './routes/_authenticated/dashboard.dono.index'
+import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
+import { Route as AuthenticatedDashboardDonoRepassesRouteImport } from './routes/_authenticated/dashboard.dono.repasses'
+import { Route as AuthenticatedDashboardDonoPermissoesRouteImport } from './routes/_authenticated/dashboard.dono.permissoes'
+import { Route as AuthenticatedDashboardDonoDatabaseRouteImport } from './routes/_authenticated/dashboard.dono.database'
+import { Route as AuthenticatedDashboardDonoAuditoriaRouteImport } from './routes/_authenticated/dashboard.dono.auditoria'
+import { Route as AuthenticatedDashboardAdminPagamentosRouteImport } from './routes/_authenticated/dashboard.admin.pagamentos'
+import { Route as AuthenticatedDashboardAdminMembrosRouteImport } from './routes/_authenticated/dashboard.admin.membros'
+import { Route as AuthenticatedDashboardAdminFormulariosRouteImport } from './routes/_authenticated/dashboard.admin.formularios'
+import { Route as AuthenticatedDashboardAdminFormEditorRouteImport } from './routes/_authenticated/dashboard.admin.form-editor'
+import { Route as AuthenticatedDashboardAdminDocumentosRouteImport } from './routes/_authenticated/dashboard.admin.documentos'
+import { Route as AuthenticatedDashboardAdminCargosRouteImport } from './routes/_authenticated/dashboard.admin.cargos'
+import { Route as AuthenticatedDashboardAdminAvisosRouteImport } from './routes/_authenticated/dashboard.admin.avisos'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPerfilRoute =
+  AuthenticatedDashboardPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPagamentosRoute =
+  AuthenticatedDashboardPagamentosRouteImport.update({
+    id: '/pagamentos',
+    path: '/pagamentos',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardFormularioRoute =
+  AuthenticatedDashboardFormularioRouteImport.update({
+    id: '/formulario',
+    path: '/formulario',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDonoRoute =
+  AuthenticatedDashboardDonoRouteImport.update({
+    id: '/dono',
+    path: '/dono',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardChatRoute =
+  AuthenticatedDashboardChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAvisosRoute =
+  AuthenticatedDashboardAvisosRouteImport.update({
+    id: '/avisos',
+    path: '/avisos',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAdminRoute =
+  AuthenticatedDashboardAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDonoIndexRoute =
+  AuthenticatedDashboardDonoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
+const AuthenticatedDashboardAdminIndexRoute =
+  AuthenticatedDashboardAdminIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardDonoRepassesRoute =
+  AuthenticatedDashboardDonoRepassesRouteImport.update({
+    id: '/repasses',
+    path: '/repasses',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
+const AuthenticatedDashboardDonoPermissoesRoute =
+  AuthenticatedDashboardDonoPermissoesRouteImport.update({
+    id: '/permissoes',
+    path: '/permissoes',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
+const AuthenticatedDashboardDonoDatabaseRoute =
+  AuthenticatedDashboardDonoDatabaseRouteImport.update({
+    id: '/database',
+    path: '/database',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
+const AuthenticatedDashboardDonoAuditoriaRoute =
+  AuthenticatedDashboardDonoAuditoriaRouteImport.update({
+    id: '/auditoria',
+    path: '/auditoria',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
+const AuthenticatedDashboardAdminPagamentosRoute =
+  AuthenticatedDashboardAdminPagamentosRouteImport.update({
+    id: '/pagamentos',
+    path: '/pagamentos',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminMembrosRoute =
+  AuthenticatedDashboardAdminMembrosRouteImport.update({
+    id: '/membros',
+    path: '/membros',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminFormulariosRoute =
+  AuthenticatedDashboardAdminFormulariosRouteImport.update({
+    id: '/formularios',
+    path: '/formularios',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminFormEditorRoute =
+  AuthenticatedDashboardAdminFormEditorRouteImport.update({
+    id: '/form-editor',
+    path: '/form-editor',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminDocumentosRoute =
+  AuthenticatedDashboardAdminDocumentosRouteImport.update({
+    id: '/documentos',
+    path: '/documentos',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminCargosRoute =
+  AuthenticatedDashboardAdminCargosRouteImport.update({
+    id: '/cargos',
+    path: '/cargos',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
+const AuthenticatedDashboardAdminAvisosRoute =
+  AuthenticatedDashboardAdminAvisosRouteImport.update({
+    id: '/avisos',
+    path: '/avisos',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
+  '/dashboard/avisos': typeof AuthenticatedDashboardAvisosRoute
+  '/dashboard/chat': typeof AuthenticatedDashboardChatRoute
+  '/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
+  '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
+  '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
+  '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
+  '/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
+  '/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
+  '/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
+  '/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
+  '/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
+  '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
+  '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
+  '/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard/avisos': typeof AuthenticatedDashboardAvisosRoute
+  '/dashboard/chat': typeof AuthenticatedDashboardChatRoute
+  '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
+  '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
+  '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
+  '/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
+  '/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
+  '/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
+  '/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
+  '/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
+  '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
+  '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
+  '/dashboard/dono': typeof AuthenticatedDashboardDonoIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRouteWithChildren
+  '/_authenticated/dashboard/avisos': typeof AuthenticatedDashboardAvisosRoute
+  '/_authenticated/dashboard/chat': typeof AuthenticatedDashboardChatRoute
+  '/_authenticated/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
+  '/_authenticated/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/_authenticated/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
+  '/_authenticated/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
+  '/_authenticated/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
+  '/_authenticated/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/_authenticated/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
+  '/_authenticated/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
+  '/_authenticated/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
+  '/_authenticated/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
+  '/_authenticated/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
+  '/_authenticated/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/_authenticated/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
+  '/_authenticated/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
+  '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
+  '/_authenticated/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/dashboard/admin'
+    | '/dashboard/avisos'
+    | '/dashboard/chat'
+    | '/dashboard/dono'
+    | '/dashboard/formulario'
+    | '/dashboard/pagamentos'
+    | '/dashboard/perfil'
+    | '/dashboard/'
+    | '/dashboard/admin/avisos'
+    | '/dashboard/admin/cargos'
+    | '/dashboard/admin/documentos'
+    | '/dashboard/admin/form-editor'
+    | '/dashboard/admin/formularios'
+    | '/dashboard/admin/membros'
+    | '/dashboard/admin/pagamentos'
+    | '/dashboard/dono/auditoria'
+    | '/dashboard/dono/database'
+    | '/dashboard/dono/permissoes'
+    | '/dashboard/dono/repasses'
+    | '/dashboard/admin/'
+    | '/dashboard/dono/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard/avisos'
+    | '/dashboard/chat'
+    | '/dashboard/formulario'
+    | '/dashboard/pagamentos'
+    | '/dashboard/perfil'
+    | '/dashboard'
+    | '/dashboard/admin/avisos'
+    | '/dashboard/admin/cargos'
+    | '/dashboard/admin/documentos'
+    | '/dashboard/admin/form-editor'
+    | '/dashboard/admin/formularios'
+    | '/dashboard/admin/membros'
+    | '/dashboard/admin/pagamentos'
+    | '/dashboard/dono/auditoria'
+    | '/dashboard/dono/database'
+    | '/dashboard/dono/permissoes'
+    | '/dashboard/dono/repasses'
+    | '/dashboard/admin'
+    | '/dashboard/dono'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/dashboard/admin'
+    | '/_authenticated/dashboard/avisos'
+    | '/_authenticated/dashboard/chat'
+    | '/_authenticated/dashboard/dono'
+    | '/_authenticated/dashboard/formulario'
+    | '/_authenticated/dashboard/pagamentos'
+    | '/_authenticated/dashboard/perfil'
+    | '/_authenticated/dashboard/'
+    | '/_authenticated/dashboard/admin/avisos'
+    | '/_authenticated/dashboard/admin/cargos'
+    | '/_authenticated/dashboard/admin/documentos'
+    | '/_authenticated/dashboard/admin/form-editor'
+    | '/_authenticated/dashboard/admin/formularios'
+    | '/_authenticated/dashboard/admin/membros'
+    | '/_authenticated/dashboard/admin/pagamentos'
+    | '/_authenticated/dashboard/dono/auditoria'
+    | '/_authenticated/dashboard/dono/database'
+    | '/_authenticated/dashboard/dono/permissoes'
+    | '/_authenticated/dashboard/dono/repasses'
+    | '/_authenticated/dashboard/admin/'
+    | '/_authenticated/dashboard/dono/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +366,272 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/perfil': {
+      id: '/_authenticated/dashboard/perfil'
+      path: '/perfil'
+      fullPath: '/dashboard/perfil'
+      preLoaderRoute: typeof AuthenticatedDashboardPerfilRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/pagamentos': {
+      id: '/_authenticated/dashboard/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/dashboard/pagamentos'
+      preLoaderRoute: typeof AuthenticatedDashboardPagamentosRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/formulario': {
+      id: '/_authenticated/dashboard/formulario'
+      path: '/formulario'
+      fullPath: '/dashboard/formulario'
+      preLoaderRoute: typeof AuthenticatedDashboardFormularioRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/dono': {
+      id: '/_authenticated/dashboard/dono'
+      path: '/dono'
+      fullPath: '/dashboard/dono'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/chat': {
+      id: '/_authenticated/dashboard/chat'
+      path: '/chat'
+      fullPath: '/dashboard/chat'
+      preLoaderRoute: typeof AuthenticatedDashboardChatRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/avisos': {
+      id: '/_authenticated/dashboard/avisos'
+      path: '/avisos'
+      fullPath: '/dashboard/avisos'
+      preLoaderRoute: typeof AuthenticatedDashboardAvisosRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/admin': {
+      id: '/_authenticated/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/dono/': {
+      id: '/_authenticated/dashboard/dono/'
+      path: '/'
+      fullPath: '/dashboard/dono/'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
+    '/_authenticated/dashboard/admin/': {
+      id: '/_authenticated/dashboard/admin/'
+      path: '/'
+      fullPath: '/dashboard/admin/'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/dono/repasses': {
+      id: '/_authenticated/dashboard/dono/repasses'
+      path: '/repasses'
+      fullPath: '/dashboard/dono/repasses'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoRepassesRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
+    '/_authenticated/dashboard/dono/permissoes': {
+      id: '/_authenticated/dashboard/dono/permissoes'
+      path: '/permissoes'
+      fullPath: '/dashboard/dono/permissoes'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoPermissoesRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
+    '/_authenticated/dashboard/dono/database': {
+      id: '/_authenticated/dashboard/dono/database'
+      path: '/database'
+      fullPath: '/dashboard/dono/database'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoDatabaseRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
+    '/_authenticated/dashboard/dono/auditoria': {
+      id: '/_authenticated/dashboard/dono/auditoria'
+      path: '/auditoria'
+      fullPath: '/dashboard/dono/auditoria'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
+    '/_authenticated/dashboard/admin/pagamentos': {
+      id: '/_authenticated/dashboard/admin/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/dashboard/admin/pagamentos'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminPagamentosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/membros': {
+      id: '/_authenticated/dashboard/admin/membros'
+      path: '/membros'
+      fullPath: '/dashboard/admin/membros'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminMembrosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/formularios': {
+      id: '/_authenticated/dashboard/admin/formularios'
+      path: '/formularios'
+      fullPath: '/dashboard/admin/formularios'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminFormulariosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/form-editor': {
+      id: '/_authenticated/dashboard/admin/form-editor'
+      path: '/form-editor'
+      fullPath: '/dashboard/admin/form-editor'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminFormEditorRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/documentos': {
+      id: '/_authenticated/dashboard/admin/documentos'
+      path: '/documentos'
+      fullPath: '/dashboard/admin/documentos'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminDocumentosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/cargos': {
+      id: '/_authenticated/dashboard/admin/cargos'
+      path: '/cargos'
+      fullPath: '/dashboard/admin/cargos'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminCargosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
+    '/_authenticated/dashboard/admin/avisos': {
+      id: '/_authenticated/dashboard/admin/avisos'
+      path: '/avisos'
+      fullPath: '/dashboard/admin/avisos'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminAvisosRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
   }
 }
 
+interface AuthenticatedDashboardAdminRouteChildren {
+  AuthenticatedDashboardAdminAvisosRoute: typeof AuthenticatedDashboardAdminAvisosRoute
+  AuthenticatedDashboardAdminCargosRoute: typeof AuthenticatedDashboardAdminCargosRoute
+  AuthenticatedDashboardAdminDocumentosRoute: typeof AuthenticatedDashboardAdminDocumentosRoute
+  AuthenticatedDashboardAdminFormEditorRoute: typeof AuthenticatedDashboardAdminFormEditorRoute
+  AuthenticatedDashboardAdminFormulariosRoute: typeof AuthenticatedDashboardAdminFormulariosRoute
+  AuthenticatedDashboardAdminMembrosRoute: typeof AuthenticatedDashboardAdminMembrosRoute
+  AuthenticatedDashboardAdminPagamentosRoute: typeof AuthenticatedDashboardAdminPagamentosRoute
+  AuthenticatedDashboardAdminIndexRoute: typeof AuthenticatedDashboardAdminIndexRoute
+}
+
+const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRouteChildren =
+  {
+    AuthenticatedDashboardAdminAvisosRoute:
+      AuthenticatedDashboardAdminAvisosRoute,
+    AuthenticatedDashboardAdminCargosRoute:
+      AuthenticatedDashboardAdminCargosRoute,
+    AuthenticatedDashboardAdminDocumentosRoute:
+      AuthenticatedDashboardAdminDocumentosRoute,
+    AuthenticatedDashboardAdminFormEditorRoute:
+      AuthenticatedDashboardAdminFormEditorRoute,
+    AuthenticatedDashboardAdminFormulariosRoute:
+      AuthenticatedDashboardAdminFormulariosRoute,
+    AuthenticatedDashboardAdminMembrosRoute:
+      AuthenticatedDashboardAdminMembrosRoute,
+    AuthenticatedDashboardAdminPagamentosRoute:
+      AuthenticatedDashboardAdminPagamentosRoute,
+    AuthenticatedDashboardAdminIndexRoute:
+      AuthenticatedDashboardAdminIndexRoute,
+  }
+
+const AuthenticatedDashboardAdminRouteWithChildren =
+  AuthenticatedDashboardAdminRoute._addFileChildren(
+    AuthenticatedDashboardAdminRouteChildren,
+  )
+
+interface AuthenticatedDashboardDonoRouteChildren {
+  AuthenticatedDashboardDonoAuditoriaRoute: typeof AuthenticatedDashboardDonoAuditoriaRoute
+  AuthenticatedDashboardDonoDatabaseRoute: typeof AuthenticatedDashboardDonoDatabaseRoute
+  AuthenticatedDashboardDonoPermissoesRoute: typeof AuthenticatedDashboardDonoPermissoesRoute
+  AuthenticatedDashboardDonoRepassesRoute: typeof AuthenticatedDashboardDonoRepassesRoute
+  AuthenticatedDashboardDonoIndexRoute: typeof AuthenticatedDashboardDonoIndexRoute
+}
+
+const AuthenticatedDashboardDonoRouteChildren: AuthenticatedDashboardDonoRouteChildren =
+  {
+    AuthenticatedDashboardDonoAuditoriaRoute:
+      AuthenticatedDashboardDonoAuditoriaRoute,
+    AuthenticatedDashboardDonoDatabaseRoute:
+      AuthenticatedDashboardDonoDatabaseRoute,
+    AuthenticatedDashboardDonoPermissoesRoute:
+      AuthenticatedDashboardDonoPermissoesRoute,
+    AuthenticatedDashboardDonoRepassesRoute:
+      AuthenticatedDashboardDonoRepassesRoute,
+    AuthenticatedDashboardDonoIndexRoute: AuthenticatedDashboardDonoIndexRoute,
+  }
+
+const AuthenticatedDashboardDonoRouteWithChildren =
+  AuthenticatedDashboardDonoRoute._addFileChildren(
+    AuthenticatedDashboardDonoRouteChildren,
+  )
+
+interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
+  AuthenticatedDashboardAvisosRoute: typeof AuthenticatedDashboardAvisosRoute
+  AuthenticatedDashboardChatRoute: typeof AuthenticatedDashboardChatRoute
+  AuthenticatedDashboardDonoRoute: typeof AuthenticatedDashboardDonoRouteWithChildren
+  AuthenticatedDashboardFormularioRoute: typeof AuthenticatedDashboardFormularioRoute
+  AuthenticatedDashboardPagamentosRoute: typeof AuthenticatedDashboardPagamentosRoute
+  AuthenticatedDashboardPerfilRoute: typeof AuthenticatedDashboardPerfilRoute
+  AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
+}
+
+const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
+  {
+    AuthenticatedDashboardAdminRoute:
+      AuthenticatedDashboardAdminRouteWithChildren,
+    AuthenticatedDashboardAvisosRoute: AuthenticatedDashboardAvisosRoute,
+    AuthenticatedDashboardChatRoute: AuthenticatedDashboardChatRoute,
+    AuthenticatedDashboardDonoRoute:
+      AuthenticatedDashboardDonoRouteWithChildren,
+    AuthenticatedDashboardFormularioRoute:
+      AuthenticatedDashboardFormularioRoute,
+    AuthenticatedDashboardPagamentosRoute:
+      AuthenticatedDashboardPagamentosRoute,
+    AuthenticatedDashboardPerfilRoute: AuthenticatedDashboardPerfilRoute,
+    AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
+  }
+
+const AuthenticatedDashboardRouteWithChildren =
+  AuthenticatedDashboardRoute._addFileChildren(
+    AuthenticatedDashboardRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

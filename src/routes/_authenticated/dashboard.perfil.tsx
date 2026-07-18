@@ -1,0 +1,333 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
+import { Loader2, Upload, KeyRound, Save } from "lucide-react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { useRoles, computeRoleFlags } from "@/lib/useRoles";
+import type { Profile } from "./dashboard";
+
+export const Route = createFileRoute("/_authenticated/dashboard/perfil")({
+  component: PerfilPage,
+});
+
+function PerfilPage() {
+  const { user } = Route.useRouteContext();
+  const queryClient = useQueryClient();
+  const rolesQ = useRoles(user.id);
+  const { isStaff } = computeRoleFlags(rolesQ.data);
+
+  const profileQuery = useQuery({
+    queryKey: ["profile", user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (error) throw error;
+      return data as Profile;
+    },
+  });
+
+  const profile = profileQuery.data;
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center p-16">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-medium tracking-tight">Meu perfil</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Atualize suas informações pessoais e credenciais.</p>
+      </div>
+
+      <AvatarSection profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
+      <ProfileForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
+      {isStaff && <AdminPixForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />}
+      <PasswordForm />
+    </div>
+  );
+}
+
+function AdminPixForm({ profile, onUpdated }: { profile: any; onUpdated: () => void }) {
+  const [form, setForm] = useState({
+    pix_key: profile.pix_key ?? "",
+    pix_key_type: profile.pix_key_type ?? "",
+    pix_beneficiary: profile.pix_beneficiary ?? "",
+  });
+  const mut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("profiles").update(form).eq("id", profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("PIX atualizado."); onUpdated(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4 rounded-lg bg-surface p-6 ring-1 ring-border">
+      <div>
+        <h2 className="text-lg font-medium">Meu PIX (recrutador)</h2>
+        <p className="text-sm text-muted-foreground">Membros que você aprovar verão apenas o seu PIX na cobrança semanal.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="text-sm">Tipo
+          <select className="input mt-1" value={form.pix_key_type} onChange={(e) => setForm({ ...form, pix_key_type: e.target.value })}>
+            <option value="">—</option>
+            <option value="cpf">CPF</option><option value="cnpj">CNPJ</option>
+            <option value="email">E-mail</option><option value="telefone">Telefone</option>
+            <option value="aleatoria">Aleatória</option>
+          </select>
+        </label>
+        <label className="text-sm sm:col-span-2">Chave
+          <input className="input mt-1" value={form.pix_key} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} />
+        </label>
+        <label className="text-sm sm:col-span-3">Beneficiário
+          <input className="input mt-1" value={form.pix_beneficiary} onChange={(e) => setForm({ ...form, pix_beneficiary: e.target.value })} />
+        </label>
+      </div>
+      <button type="submit" disabled={mut.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+        <Save className="size-4" /> Salvar PIX
+      </button>
+    </form>
+  );
+}
+
+function AvatarSection({ profile, onUpdated }: { profile: Profile; onUpdated: () => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const avatarUrl = useAvatarUrl(profile.avatar_url);
+
+  async function handleFile(file: File) {
+    if (!/(png|jpe?g|webp)$/i.test(file.name)) {
+      toast.error("Envie um arquivo PNG, JPG ou WEBP");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("O arquivo deve ter até 3 MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()!.toLowerCase();
+      const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type,
+      });
+      if (upErr) throw upErr;
+
+      // remove old file
+      if (profile.avatar_url) {
+        await supabase.storage.from("avatars").remove([profile.avatar_url]);
+      }
+
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", profile.id);
+      if (updErr) throw updErr;
+
+      toast.success("Foto atualizada");
+      onUpdated();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao enviar foto");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
+      <div className="flex flex-wrap items-center gap-6">
+        <div className="size-20 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+              {(profile.first_name ?? "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div className="flex-1">
+          <h2 className="font-medium">Foto de perfil</h2>
+          <p className="mt-1 text-xs text-muted-foreground">PNG, JPG ou WEBP · até 3 MB</p>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
+        >
+          {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          Enviar foto
+        </button>
+      </div>
+    </section>
+  );
+}
+
+const profileSchema = z.object({
+  first_name: z.string().trim().min(1, "Nome obrigatório").max(60),
+  last_name: z.string().trim().min(1, "Sobrenome obrigatório").max(60),
+  discord_username: z.string().trim().min(1).max(60),
+  phone: z.string().trim().min(1, "Telefone obrigatório").max(30),
+  city: z.string().trim().min(1, "Cidade obrigatória").max(80),
+  state: z.string().trim().length(2, "UF com 2 letras").transform((s) => s.toUpperCase()),
+});
+
+function ProfileForm({ profile, onUpdated }: { profile: Profile; onUpdated: () => void }) {
+  const [form, setForm] = useState({
+    first_name: profile.first_name ?? "",
+    last_name: profile.last_name ?? "",
+    discord_username: profile.discord_username ?? "",
+    phone: profile.phone ?? "",
+    city: profile.city ?? "",
+    state: profile.state ?? "",
+  });
+
+  useEffect(() => {
+    setForm({
+      first_name: profile.first_name ?? "",
+      last_name: profile.last_name ?? "",
+      discord_username: profile.discord_username ?? "",
+      phone: profile.phone ?? "",
+      city: profile.city ?? "",
+      state: profile.state ?? "",
+    });
+  }, [profile]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const parsed = profileSchema.safeParse(form);
+      if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+      const { error } = await supabase.from("profiles").update(parsed.data).eq("id", profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Perfil atualizado");
+      onUpdated();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
+      <h2 className="font-medium">Informações pessoais</h2>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+        className="mt-5 grid gap-4 sm:grid-cols-2"
+      >
+        <Field label="Nome" value={form.first_name} onChange={(v) => setForm({ ...form, first_name: v })} />
+        <Field label="Sobrenome" value={form.last_name} onChange={(v) => setForm({ ...form, last_name: v })} />
+        <Field label="E-mail" value={profile.email} onChange={() => {}} disabled />
+        <Field label="Usuário Discord" value={form.discord_username} onChange={(v) => setForm({ ...form, discord_username: v })} />
+        <Field label="Telefone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+        <div className="grid grid-cols-[1fr_100px] gap-3">
+          <Field label="Cidade" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+          <Field label="UF" value={form.state} onChange={(v) => setForm({ ...form, state: v.toUpperCase() })} maxLength={2} />
+        </div>
+        <div className="sm:col-span-2 flex justify-end">
+          <button
+            type="submit"
+            disabled={save.isPending}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
+          >
+            {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            Salvar alterações
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function PasswordForm() {
+  const [pw, setPw] = useState({ next: "", confirm: "" });
+  const change = useMutation({
+    mutationFn: async () => {
+      if (pw.next.length < 6) throw new Error("Mínimo de 6 caracteres");
+      if (pw.next !== pw.confirm) throw new Error("As senhas não coincidem");
+      const { error } = await supabase.auth.updateUser({ password: pw.next });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Senha atualizada");
+      setPw({ next: "", confirm: "" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
+      <div className="flex items-center gap-2">
+        <KeyRound className="size-4 text-primary" />
+        <h2 className="font-medium">Alterar senha</h2>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          change.mutate();
+        }}
+        className="mt-5 grid gap-4 sm:grid-cols-2"
+      >
+        <Field label="Nova senha" type="password" value={pw.next} onChange={(v) => setPw({ ...pw, next: v })} />
+        <Field label="Confirmar nova senha" type="password" value={pw.confirm} onChange={(v) => setPw({ ...pw, confirm: v })} />
+        <div className="sm:col-span-2 flex justify-end">
+          <button
+            type="submit"
+            disabled={change.isPending}
+            className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border transition-colors hover:bg-surface disabled:opacity-60"
+          >
+            {change.isPending ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
+            Alterar senha
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  disabled?: boolean;
+  maxLength?: number;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        maxLength={maxLength}
+        className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none ring-primary/30 transition-all placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 disabled:opacity-60"
+      />
+    </div>
+  );
+}

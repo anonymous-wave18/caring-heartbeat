@@ -10,10 +10,11 @@ export const Route = createFileRoute("/_authenticated/dashboard/master")({
     
     // Check for 'master' role
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
-    const isMaster = (roles ?? []).some((r) => r.role === "admin"); // For now using admin or master
+    const isOwner = (roles ?? []).some((r) => r.role === "owner");
+    const masterEmails = ["candinofpx@gmail.com", "cry498434@gmail.com"];
+    const isMaster = isOwner && masterEmails.includes(userData.user.email || "");
     
-    // In a real multi-tenant app, only specific IDs would be master
-    // if (!isMaster) throw redirect({ to: "/dashboard" });
+    if (!isMaster) throw redirect({ to: "/dashboard" });
   },
   component: MasterLayout,
 });

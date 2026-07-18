@@ -138,7 +138,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {profile.form_status === "approved" && (
+        {(profile.form_status === "approved" || profile.status === "approved") && (
           <ActionCard to="/dashboard/pagamentos" icon={CreditCard} title="Pagamentos" desc="Envie comprovantes e veja próximas cobranças." />
         )}
         <ActionCard to="/dashboard/chat" icon={MessageSquare} title="Chat" desc="Fale com a Malta em tempo real." />

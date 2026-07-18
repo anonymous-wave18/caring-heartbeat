@@ -146,6 +146,7 @@ function FormularioPage() {
         location_lat: form.location_lat === "" ? null : Number(form.location_lat),
         location_lng: form.location_lng === "" ? null : Number(form.location_lng),
         location_captured_at: form.location_captured_at || null,
+        address_proof: form.address_proof || null,
         custom_answers: answers as any,
         status: (submit ? "submitted" : "not_submitted") as "submitted" | "not_submitted",
         submitted_at: submit ? new Date().toISOString() : null,

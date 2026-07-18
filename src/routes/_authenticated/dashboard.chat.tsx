@@ -309,3 +309,10 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
     </div>
   );
 }
+
+function AvatarImage({ path, fallback }: { path: string | null | undefined; fallback: string }) {
+  const url = useAvatarUrl(path ?? null);
+  if (url) return <img src={url} alt="" className="size-full object-cover" />;
+  if (path && (path.startsWith("http") || path.startsWith("blob:"))) return <img src={path} alt="" className="size-full object-cover" />;
+  return <>{fallback}</>;
+}

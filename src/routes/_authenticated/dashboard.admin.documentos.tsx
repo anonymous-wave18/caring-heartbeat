@@ -45,12 +45,19 @@ function AdminDocumentos() {
     // Audit log for sensitive data access
     const { data: me } = await supabase.auth.getUser();
     if (me.user) {
+      const docOwner = byUser.find(u => u.docs.some(d => d.file_path === path));
       await supabase.from("audit_log").insert({
         actor_id: me.user.id,
         action: "document.view",
         entity: "recruitment_documents",
-        entity_id: path, // using path as id identifier here or we could find id
-        metadata: { file_name: name, ua: navigator.userAgent }
+        entity_id: path,
+        metadata: { 
+          file_name: name, 
+          viewed_user_id: docOwner?.id,
+          viewed_user_name: docOwner?.name,
+          ua: navigator.userAgent,
+          platform: navigator.platform
+        }
       });
     }
 

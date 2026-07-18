@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 
@@ -129,7 +130,6 @@ function ChatPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{label}</div>
-                    {t.last_message_body && <div className="truncate text-[11px] text-muted-foreground font-normal">{t.last_message_body}</div>}
                   </div>
                 </button>
               </li>
@@ -263,9 +263,9 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                 </div>
                 
                 {/* Ações de mensagem (simuladas UI) */}
-                <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1`}>
-                   <button className="p-1 hover:bg-surface-muted rounded text-muted-foreground"><ArrowLeft className="size-3" /></button>
-                   {isMe && <button className="p-1 hover:bg-destructive/10 hover:text-destructive rounded text-muted-foreground"><Trash2 className="size-3" /></button>}
+                <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1 transition-all`}>
+                   <button className="p-1.5 hover:bg-surface-muted rounded-full text-muted-foreground transition-colors" title="Responder"><Reply className="size-3.5" /></button>
+                   {isMe && <button className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full text-muted-foreground transition-colors" title="Apagar"><Trash2 className="size-3.5" /></button>}
                 </div>
               </div>
               {isMe && (

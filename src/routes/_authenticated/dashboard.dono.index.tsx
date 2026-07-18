@@ -70,62 +70,63 @@ function OwnerConfig() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
-        <h2 className="text-lg font-medium">Identidade</h2>
-        <Field label="Nome da organização">
-          <input value={form.org_name} onChange={(e) => setForm({ ...form, org_name: e.target.value })} className="input" />
-        </Field>
-      </section>
+        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
+          <h2 className="text-lg font-medium">Identidade</h2>
+          <Field label="Nome da organização">
+            <input value={form.org_name} onChange={(e) => setForm({ ...form, org_name: e.target.value })} className="input" />
+          </Field>
+        </section>
 
-      <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
-        <h2 className="text-lg font-medium">PIX padrão do semanal</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Tipo de chave">
-            <select value={form.pix_key_type} onChange={(e) => setForm({ ...form, pix_key_type: e.target.value })} className="input">
-              <option value="cpf">CPF</option><option value="cnpj">CNPJ</option>
-              <option value="email">E-mail</option><option value="phone">Telefone</option>
-              <option value="random">Aleatória</option>
-            </select>
-          </Field>
-          <Field label="Beneficiário">
-            <input value={form.pix_beneficiary} onChange={(e) => setForm({ ...form, pix_beneficiary: e.target.value })} className="input" />
-          </Field>
-          <div className="col-span-2">
-            <Field label="Chave PIX">
-              <input value={form.pix_key} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} className="input font-mono" />
+        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
+          <h2 className="text-lg font-medium">PIX padrão do semanal</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Tipo de chave">
+              <select value={form.pix_key_type} onChange={(e) => setForm({ ...form, pix_key_type: e.target.value })} className="input">
+                <option value="cpf">CPF</option><option value="cnpj">CNPJ</option>
+                <option value="email">E-mail</option><option value="phone">Telefone</option>
+                <option value="random">Aleatória</option>
+              </select>
+            </Field>
+            <Field label="Beneficiário">
+              <input value={form.pix_beneficiary} onChange={(e) => setForm({ ...form, pix_beneficiary: e.target.value })} className="input" />
+            </Field>
+            <div className="col-span-2">
+              <Field label="Chave PIX">
+                <input value={form.pix_key} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} className="input font-mono" />
+              </Field>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
+          <h2 className="text-lg font-medium">Financeiro</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Valor semanal (R$)">
+              <input type="number" step="0.01" value={form.weekly_amount}
+                onChange={(e) => setForm({ ...form, weekly_amount: e.target.value })} className="input" />
+            </Field>
+            <Field label="Dia de vencimento (1-28)">
+              <input type="number" min={1} max={28} value={form.payment_due_day}
+                onChange={(e) => setForm({ ...form, payment_due_day: e.target.value })} className="input" />
             </Field>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
-        <h2 className="text-lg font-medium">Financeiro</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Valor semanal (R$)">
-            <input type="number" step="0.01" value={form.weekly_amount}
-              onChange={(e) => setForm({ ...form, weekly_amount: e.target.value })} className="input" />
+        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
+          <h2 className="text-lg font-medium">Integrações</h2>
+          <Field label="Webhook do Discord (opcional)">
+            <input placeholder="https://discord.com/api/webhooks/..." value={form.discord_webhook_url}
+              onChange={(e) => setForm({ ...form, discord_webhook_url: e.target.value })} className="input" />
           </Field>
-          <Field label="Dia de vencimento (1-28)">
-            <input type="number" min={1} max={28} value={form.payment_due_day}
-              onChange={(e) => setForm({ ...form, payment_due_day: e.target.value })} className="input" />
-          </Field>
+          <p className="text-xs text-muted-foreground">Anúncios podem ser espelhados no seu canal Discord (fase futura).</p>
+        </section>
+
+        <div className="lg:col-span-2 flex justify-end">
+          <button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            {saveMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} Salvar tudo
+          </button>
         </div>
-      </section>
-
-      <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-3">
-        <h2 className="text-lg font-medium">Integrações</h2>
-        <Field label="Webhook do Discord (opcional)">
-          <input placeholder="https://discord.com/api/webhooks/..." value={form.discord_webhook_url}
-            onChange={(e) => setForm({ ...form, discord_webhook_url: e.target.value })} className="input" />
-        </Field>
-        <p className="text-xs text-muted-foreground">Anúncios podem ser espelhados no seu canal Discord (fase futura).</p>
-      </section>
-
-      <div className="lg:col-span-2 flex justify-end">
-        <button onClick={() => saveMut.mutate()} disabled={saveMut.isPending}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          {saveMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} Salvar tudo
-        </button>
       </div>
     </div>
   );

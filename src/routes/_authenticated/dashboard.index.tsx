@@ -77,7 +77,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
   });
   const nextPaymentQ = useQuery({
     queryKey: ["my-next-payment", userId],
-    enabled: profile.form_status === "approved",
+    enabled: profile.form_status === "approved" || profile.status === "approved",
     queryFn: async () => {
       const { data } = await supabase.from("payments").select("*").eq("user_id", userId)
         .in("status", ["pending", "submitted", "overdue"]).order("week_start", { ascending: false }).limit(1).maybeSingle();

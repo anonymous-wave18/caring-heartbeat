@@ -44,6 +44,7 @@ export const DEFAULT_FIELD_LABELS: Record<FieldKey, string> = {
   motivation: "Motivação para entrar",
   referred_by: "Indicado por (opcional)",
   location: "Localização em tempo real",
+  address_proof: "Comprovante de residência",
 };
 
 export const DEFAULT_FORM_CONFIG: FormConfig = {

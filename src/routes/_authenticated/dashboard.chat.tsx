@@ -88,10 +88,37 @@ function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
-    if (!selected && threadsQ.data && threadsQ.data.length > 0) {
-      setSelected(threadsQ.data[0].id);
+    async function resolveThread() {
+      if (threadFromUrl?.startsWith("dm:")) {
+        const memberId = threadFromUrl.split(":")[1];
+        if (!memberId) return;
+        
+        // Check if thread exists
+        const existing = threadsQ.data?.find(t => t.kind === "direct" && t.member_id === memberId);
+        if (existing) {
+          setSelected(existing.id);
+        } else if (isStaff) {
+          // Create new direct thread for staff
+          const { data, error } = await supabase.from("chat_threads").insert({
+            kind: "direct",
+            member_id: memberId,
+            title: "Privado"
+          }).select().single();
+          
+          if (!error && data) {
+            qc.invalidateQueries({ queryKey: ["threads"] });
+            setSelected(data.id);
+          }
+        }
+      } else if (!selected && threadsQ.data && threadsQ.data.length > 0) {
+        setSelected(threadsQ.data[0].id);
+      }
     }
-  }, [threadsQ.data, selected]);
+    
+    if (threadsQ.data) {
+      resolveThread();
+    }
+  }, [threadsQ.data, selected, threadFromUrl, isStaff, qc]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];

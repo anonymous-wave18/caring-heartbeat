@@ -68,7 +68,7 @@ function AdminPage() {
     if (filter !== "all" && p.status !== filter) return false;
     const searchVal = search.toLowerCase().trim();
     if (!searchVal) return true;
-    const fullName = `${p.full_name || ""} ${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
+    const fullName = `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
     const email = (p.email || "").toLowerCase();
     const discord = (p.discord_username || "").toLowerCase();
     return fullName.includes(searchVal) || email.includes(searchVal) || discord.includes(searchVal);

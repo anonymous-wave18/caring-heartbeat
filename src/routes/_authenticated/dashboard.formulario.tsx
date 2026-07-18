@@ -92,6 +92,7 @@ function FormularioPage() {
         location_lat: d.location_lat ?? "",
         location_lng: d.location_lng ?? "",
         location_captured_at: d.location_captured_at ?? "",
+        address_proof: d.address_proof ?? "",
       });
       setAnswers((d.custom_answers as Record<string, string>) ?? {});
     }

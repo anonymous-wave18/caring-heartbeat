@@ -48,7 +48,12 @@ function ChatPage() {
     queryKey: ["threads", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase.from("chat_threads").select("*").order("kind").order("updated_at", { ascending: false });
+      // For staff: see all threads. For members: see threads they are part of (member_id = userId) or general
+      let q = supabase.from("chat_threads").select("*");
+      if (!isStaff) {
+        q = q.or(`member_id.eq.${userId},kind.eq.general`);
+      }
+      const { data } = await q.order("kind").order("updated_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -161,7 +166,8 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
   const senderIds = (msgsQ.data ?? []).map((m) => m.sender_id);
-  const profsQ = useProfilesBasic(senderIds);
+  const uniqueSenderIds = Array.from(new Set(senderIds));
+  const profsQ = useProfilesBasic(uniqueSenderIds);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });

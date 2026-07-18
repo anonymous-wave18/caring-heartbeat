@@ -122,7 +122,7 @@ function AdminPage() {
         ) : (
           <div className="divide-y divide-border">
             {filtered.map((p) => (
-              <div key={p.id} className="grid gap-3 px-6 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div key={p.id} className="grid gap-3 px-6 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-medium">
@@ -133,6 +133,17 @@ function AdminPage() {
                   <div className="mt-0.5 truncate text-xs text-muted-foreground">
                     {p.email} · {p.discord_username ?? "sem Discord"} · {p.city ?? "—"}/{p.state ?? "—"}
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="text-[10px] text-muted-foreground uppercase tracking-tight">Formulário:</div>
+                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ring-1 ${
+                     p.form_status === 'approved' ? 'bg-success/10 text-success ring-success/30' :
+                     p.form_status === 'submitted' ? 'bg-warning/10 text-warning ring-warning/30' :
+                     p.form_status === 'rejected' ? 'bg-destructive/10 text-destructive ring-destructive/30' :
+                     'bg-surface-muted text-muted-foreground ring-border'
+                   }`}>
+                     {p.form_status === 'not_submitted' ? 'Não enviado' : p.form_status === 'submitted' ? 'Em análise' : p.form_status === 'approved' ? 'Aprovado' : 'Recusado'}
+                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {p.status !== "approved" && (

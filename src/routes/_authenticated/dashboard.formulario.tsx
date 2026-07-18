@@ -108,7 +108,7 @@ function FormularioPage() {
         const checks: FieldKey[] = [
           "cargo_desejado_id","full_name","birth_date","cpf","bank_name","bank_holder",
           "discord_contact","discord_avatar_url","phone_self","phone_father","phone_mother",
-          "availability","experience","motivation","referred_by",
+          "availability","experience","motivation","referred_by","address_proof",
         ];
         for (const k of checks) {
           const fc = F?.[k];

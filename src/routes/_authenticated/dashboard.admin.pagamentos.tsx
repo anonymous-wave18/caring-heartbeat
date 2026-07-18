@@ -116,20 +116,19 @@ function AdminPagamentos() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => {
-            const csv = [
-              const header = ["Membro", "Email", "Semana", "Vencimento", "Valor", "Status"].join(",");
-              const csvRows = filtered.map((p: any) => [
-                `"${(p.profiles?.first_name || "")} ${(p.profiles?.last_name || "")}"`.trim(),
-                `"${p.profiles?.email || ""}"`,
-                `"${p.week_start || ""}"`,
-                `"${p.due_date || ""}"`,
-                `"${p.amount || 0}"`,
-                `"${p.status || ""}"`
-              ].join(","));
-              const csv = header + "\n" + csvRows.join("\n");
-              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a"); a.href = url; a.download = `pagamentos_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+            const header = ["Membro", "Email", "Semana", "Vencimento", "Valor", "Status"].join(",");
+            const csvRows = filtered.map((p: any) => [
+              `"${(p.profiles?.first_name || "")} ${(p.profiles?.last_name || "")}"`.trim(),
+              `"${p.profiles?.email || ""}"`,
+              `"${p.week_start || ""}"`,
+              `"${p.due_date || ""}"`,
+              `"${p.amount || 0}"`,
+              `"${p.status || ""}"`
+            ].join(","));
+            const csv = header + "\n" + csvRows.join("\n");
+            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = `pagamentos_${new Date().toISOString().split('T')[0]}.csv`; a.click();
           }} className="inline-flex items-center gap-1 rounded-md bg-surface px-3 py-2 text-sm font-medium ring-1 ring-border hover:bg-surface-muted">
             <Download className="size-4" /> Exportar CSV
           </button>

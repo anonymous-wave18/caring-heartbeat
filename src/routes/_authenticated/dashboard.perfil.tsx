@@ -340,7 +340,7 @@ function AchievementsSection({ userId }: { userId: string }) {
         <h2 className="font-medium">Minhas Conquistas</h2>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {badges.map((b, i) => (
+        {badges.map((b: any, i: number) => (
           <div key={i} className={`flex flex-col items-center p-4 rounded-xl ring-1 transition-all ${b.unlocked ? "bg-primary/5 ring-primary/20" : "bg-surface-muted/30 ring-border opacity-50 grayscale"}`}>
             <div className={`p-3 rounded-full bg-background mb-3 ring-1 ring-border ${b.color || "text-primary"}`}>
               {typeof b.icon === 'string' ? <Star className="size-6" /> : <b.icon className="size-6" />}

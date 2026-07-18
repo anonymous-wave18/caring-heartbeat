@@ -44,20 +44,25 @@ function AdminFormularios() {
       if (!fdata) throw new Error("Formulário não encontrado");
 
       if (args.status === "approved" && fdata.cargo_desejado_id) {
-        // 2. Get cargo details by ID
+        // 2. Get form details for syncing
+        const { data: formDetails } = await supabase.from("recruitment_forms").select("*").eq("id", args.id).single();
+        // 3. Get cargo details
         const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
 
-        // 3. Update profile
+        // 4. Update profile with info from form
         const { error: pErr } = await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
-          status: "approved"
+          status: "approved",
+          first_name: formDetails?.full_name?.split(" ")[0] || null,
+          last_name: formDetails?.full_name?.split(" ").slice(1).join(" ") || null,
+          avatar_url: formDetails?.discord_avatar_url || null,
+          pix_key: formDetails?.bank_name || null, // Fallback or dedicated field? User mentioned PIX.
         }).eq("id", args.user_id);
         if (pErr) throw pErr;
 
-        // 4. Update user_roles based on slug or default
-        // If slug contains 'rec' or 'admin', we give them admin role
+        // 5. Update user_roles based on slug or default
         const isStaffCargo = cargoData?.slug?.toLowerCase().includes("rec") || cargoData?.slug?.toLowerCase().includes("admin");
         
         await supabase.from("user_roles").upsert({ 

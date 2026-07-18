@@ -5,7 +5,7 @@ import { Loader2, Upload, Trash2, FileText, CheckCircle2, XCircle, Clock, MapPin
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFormConfig, type FieldKey } from "@/lib/formConfig";
-import { maskCPF, maskPhone } from "@/lib/masks";
+import { maskCPF, maskPhone, maskCEP, maskDate } from "@/lib/masks";
 
 export const Route = createFileRoute("/_authenticated/dashboard/formulario")({
   component: FormularioPage,
@@ -248,7 +248,7 @@ function FormularioPage() {
         </Field>}
         <div className="grid gap-4 sm:grid-cols-2">
           {show("birth_date") && <Field label={lbl("birth_date")} required={req("birth_date")}>
-            <input type="date" disabled={readOnly} className="input" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+            <input disabled={readOnly} className="input" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: maskDate(e.target.value) })} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} />
           </Field>}
           {show("cpf") && <Field label={lbl("cpf")} required={req("cpf")}>
             <input disabled={readOnly} className="input" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: maskCPF(e.target.value) })} placeholder="000.000.000-00" inputMode="numeric" maxLength={14} />

@@ -66,6 +66,7 @@ function FormularioPage() {
     location_lat: "" as string | number,
     location_lng: "" as string | number,
     location_captured_at: "" as string | null,
+    address_proof: "",
   });
   const [answers, setAnswers] = useState<Record<string, string>>({});
 

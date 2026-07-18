@@ -85,9 +85,17 @@ function AdminPage() {
           <p className="mt-1 text-sm text-muted-foreground">Gerencie cadastros, aprovações e membros da Malta.</p>
         </div>
         <div className="flex flex-col items-end gap-1 rounded-lg bg-surface p-3 text-[10px] ring-1 ring-border">
-          <div className="font-mono text-muted-foreground uppercase tracking-widest">Supabase CLI / Banco</div>
-          <div className="font-mono text-primary font-bold">npx supabase login</div>
-          <div className="font-mono text-primary font-bold">npx supabase link --project-ref lthxjvqjisjuuetoebrz</div>
+          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações do Dono</div>
+          <div className="flex gap-2">
+            <div className="flex flex-col items-end">
+              <span className="text-muted-foreground">Supabase Login:</span>
+              <code className="font-mono text-primary font-bold">npx supabase login</code>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-muted-foreground">Link Projeto:</span>
+              <code className="font-mono text-primary font-bold">npx supabase link --project-ref lthxjvqjisjuuetoebrz</code>
+            </div>
+          </div>
         </div>
       </div>
 

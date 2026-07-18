@@ -68,7 +68,8 @@ function AdminPixForm({ profile, onUpdated }: { profile: any; onUpdated: () => v
     onError: (e: Error) => toast.error(e.message),
   });
   return (
-    <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4 rounded-lg bg-surface p-6 ring-1 ring-border">
+    <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4 rounded-lg bg-surface p-6 ring-1 ring-border relative overflow-hidden">
+      {mut.isPending && <div className="absolute inset-0 z-10 bg-surface/50 backdrop-blur-[1px] grid place-items-center"><Loader2 className="size-6 animate-spin text-primary" /></div>}
       <div>
         <h2 className="text-lg font-medium">Meu PIX (recrutador)</h2>
         <p className="text-sm text-muted-foreground">Membros que você aprovar verão apenas o seu PIX na cobrança semanal.</p>

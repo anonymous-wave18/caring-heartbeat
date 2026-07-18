@@ -84,7 +84,7 @@ function ChatPage() {
   const sidebarProfilesQ = useProfilesBasic(memberIds);
 
   return (
-    <div className="relative flex h-[calc(100vh-160px)] gap-4">
+    <div className="relative flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] gap-4">
       {/* Sidebar */}
       <aside className={`
         ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 w-72 translate-x-0" : "fixed inset-y-0 left-0 z-40 w-72 -translate-x-full"}
@@ -123,14 +123,19 @@ function ChatPage() {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main */}
-      <div className="flex-1 min-w-0 rounded-lg bg-surface ring-1 ring-border overflow-hidden">
+      <div className="flex-1 min-w-0 rounded-lg bg-surface ring-1 ring-border overflow-hidden flex flex-col">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2 md:hidden">
           <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSidebarOpen(true)}>
-            {selected ? <ArrowLeft className="size-4" /> : <Menu className="size-4" />}
+            <Menu className="size-4" />
           </button>
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium truncate flex-1">
             {selected ? (threadsQ.data?.find((t) => t.id === selected)?.title ?? "Conversa") : "Conversas"}
           </span>
+          {selected && (
+            <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSelected(null)}>
+              <ArrowLeft className="size-4" />
+            </button>
+          )}
         </div>
         {selected && userId
           ? <ThreadView threadId={selected} userId={userId} />
@@ -209,8 +214,8 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
                 <button 
-                  onClick={() => window.location.href = `/dashboard/perfil?id=${m.sender_id}`}
-                  className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all"
+                  onClick={() => window.location.href = `/dashboard/membros?id=${m.sender_id}`}
+                  className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
                   {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
                 </button>
@@ -245,7 +250,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
               {isMe && (
                 <button 
                   onClick={() => window.location.href = `/dashboard/perfil`}
-                  className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary hover:ring-primary transition-all"
+                  className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary hover:ring-primary transition-all focus:ring-2"
                 >
                   {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
                 </button>

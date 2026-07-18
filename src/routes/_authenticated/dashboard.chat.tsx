@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
@@ -80,10 +80,15 @@ function ChatPage() {
     }
   }, [userId, isStaff, threadsQ.data, qc]);
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const searchParams = new URLSearchParams(window.location.search);
+  const threadFromUrl = searchParams.get("thread");
+  const [selected, setSelected] = useState<string | null>(threadFromUrl);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   useEffect(() => {
-    if (!selected && threadsQ.data && threadsQ.data.length > 0) setSelected(threadsQ.data[0].id);
+    if (!selected && threadsQ.data && threadsQ.data.length > 0) {
+      setSelected(threadsQ.data[0].id);
+    }
   }, [threadsQ.data, selected]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
@@ -116,9 +121,9 @@ function ChatPage() {
               if (isStaff && memberProf) {
                 label = displayName(memberProf);
               } else if (!isStaff) {
-                label = "Suporte Malta";
+                 label = "Suporte Malta";
               } else if (isStaff && !memberProf && t.member_id) {
-                 label = "Recruta Aguardando";
+                 label = "Aguardando Contato";
               }
             }
 
@@ -129,7 +134,7 @@ function ChatPage() {
                     selected === t.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-surface-muted"
                   }`}>
                   <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[10px]">
-                    {t.kind === "general" ? <Hash className="size-4" /> : (memberProf?.avatar_url ? <img src={memberProf.avatar_url} alt="" className="size-full object-cover" /> : <UserIcon className="size-4" />)}
+                    {t.kind === "general" ? <Hash className="size-4" /> : <AvatarImage path={memberProf?.avatar_url} fallback={initials(memberProf)} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{label}</div>
@@ -250,7 +255,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
                 <button 
-                  onClick={() => window.location.href = `/dashboard/perfil?id=${m.sender_id}`}
+                  onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
                   <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
@@ -262,7 +267,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                 }`}>
                   {!isMe && (
                     <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                      <span className="text-foreground/80">{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
+                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
                       {p?.is_staff && (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                           <Shield className="size-2.5" /> ADM
@@ -326,8 +331,8 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
           <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
           
           {/* Swipe UI simulator placeholder */}
-          <div className="absolute -top-8 left-0 hidden group-focus-within/input:block text-[10px] text-muted-foreground animate-bounce">
-            Arrasta para responder (simulado)
+          <div className="absolute -top-8 left-0 hidden group-focus-within/input:flex items-center gap-1 text-[10px] text-muted-foreground animate-bounce">
+            <Reply className="size-3" /> Deslize para responder (em breve)
           </div>
         </div>
         <button type="submit" disabled={!text.trim() || sendMut.isPending}

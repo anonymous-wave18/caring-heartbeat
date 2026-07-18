@@ -109,11 +109,11 @@ function DashboardLayout() {
     { to: "/dashboard/dono", label: "Dono", icon: Crown, exact: false },
   ] : [];
   const masterNav = isOwner ? [
-    { to: "/dashboard/master", label: "Master", icon: Globe, exact: false },
+    { to: "/dashboard/master", label: "Master (SaaS)", icon: Globe, exact: false },
   ] : [];
   const nav = [...memberNav, ...adminNav, ...ownerNav, ...masterNav];
 
-  const approved = profile?.status === "approved";
+  const approved = profile?.status === "approved" || isOwner;
   const initial = (profile?.first_name ?? "?").charAt(0).toUpperCase();
 
   return (

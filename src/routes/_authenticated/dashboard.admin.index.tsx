@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { toast } from "sonner";
 import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileCheck, BarChart3 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
@@ -14,6 +15,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
 type StatusFilter = "all" | "pending" | "approved" | "rejected";
 
 function AdminPage() {
+  const { user } = Route.useRouteContext();
+  const rolesQ = useRoles(user.id);
+  const { isOwner } = computeRoleFlags(rolesQ.data);
+
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
@@ -23,7 +28,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, user_roles!user_roles_user_id_fkey(role)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Profile[];
@@ -61,20 +66,18 @@ function AdminPage() {
   const all = membersQuery.data ?? [];
   const filtered = all.filter((p) => {
     if (filter !== "all" && p.status !== filter) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      p.email.toLowerCase().includes(q) ||
-      (p.first_name ?? "").toLowerCase().includes(q) ||
-      (p.last_name ?? "").toLowerCase().includes(q) ||
-      (p.discord_username ?? "").toLowerCase().includes(q)
-    );
+    const searchVal = search.toLowerCase().trim();
+    if (!searchVal) return true;
+    const fullName = `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
+    const email = (p.email || "").toLowerCase();
+    const discord = (p.discord_username || "").toLowerCase();
+    return fullName.includes(searchVal) || email.includes(searchVal) || discord.includes(searchVal);
   });
 
   const counts = {
     all: all.length,
     pending: all.filter((p) => p.status === "pending").length,
-    approved: all.filter((p) => p.status === "approved").length,
+    approved: all.filter((p) => p.status === "approved" && !(p as any).user_roles?.some((r: any) => r.role === 'admin' || r.role === 'owner')).length,
     rejected: all.filter((p) => p.status === "rejected").length,
   };
 
@@ -99,7 +102,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
+        <MetricCard label="Membros Ativos (Recrutas)" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
         <MetricCard label="Pendentes" value={counts.pending} trend="ação requerida" highlight icon={<FileCheck className="size-4" />} />
         <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} icon={<TrendingUp className="size-4" />} />
         <MetricCard label="Total Cadastros" value={all.length} icon={<BarChart3 className="size-4" />} />
@@ -151,16 +154,17 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-medium tracking-tight">Cadastros</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie cadastros, aprovações e membros da Malta.</p>
         </div>
+        {isOwner && (
         <div className="flex flex-col items-end gap-1 rounded-lg bg-surface p-3 text-[10px] ring-1 ring-border">
-          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações do Dono</div>
+          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações de Conexão</div>
           <div className="flex gap-2">
             <div className="flex flex-col items-end">
-              <span className="text-muted-foreground">Supabase Login:</span>
+              <span className="text-muted-foreground">Login CLI:</span>
               <code className="font-mono text-primary font-bold">npx supabase login</code>
             </div>
             <div className="flex flex-col items-end">
@@ -169,6 +173,7 @@ function AdminPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

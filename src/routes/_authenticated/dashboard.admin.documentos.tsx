@@ -18,7 +18,7 @@ function AdminDocumentos() {
       const { data, error } = await supabase.from("recruitment_documents")
         .select(`
           id, user_id, file_path, file_name, kind, created_at,
-          profiles:user_id(first_name, last_name, email)
+          profiles:user_id(id, first_name, last_name, email)
         `)
         .order("created_at", { ascending: false });
       if (error) {
@@ -116,7 +116,13 @@ function AdminDocumentos() {
             <ul className="divide-y divide-border">
               {openUser.docs.map((d) => (
                 <li key={d.id} className="flex items-center justify-between p-3 text-sm">
-                  <span className="inline-flex items-center gap-2"><FileText className="size-4 text-muted-foreground" />{d.file_name}</span>
+                  <span className="inline-flex flex-col">
+                    <span className="inline-flex items-center gap-2 font-medium">
+                      <FileText className="size-4 text-muted-foreground" />
+                      {d.file_name}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground uppercase ml-6">{d.kind}</span>
+                  </span>
                   <button onClick={() => download(d.file_path, d.file_name)}
                     className="inline-flex items-center gap-1 text-primary hover:underline">
                     <Download className="size-3.5" /> baixar

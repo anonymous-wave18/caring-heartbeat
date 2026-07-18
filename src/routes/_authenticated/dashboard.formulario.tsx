@@ -244,7 +244,7 @@ function FormularioPage() {
       <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-4">
         <h2 className="text-lg font-medium">👤 Dados pessoais</h2>
         {show("full_name") && <Field label={lbl("full_name")} required={req("full_name")}>
-          <input disabled={readOnly} className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value.toUpperCase() })} placeholder="NOME COMPLETO" />
+          <input disabled={readOnly} className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value.toUpperCase() })} placeholder="NOME COMPLETO" onKeyDown={(e) => e.stopPropagation()} />
         </Field>}
         <div className="grid gap-4 sm:grid-cols-2">
           {show("birth_date") && <Field label={lbl("birth_date")} required={req("birth_date")}>

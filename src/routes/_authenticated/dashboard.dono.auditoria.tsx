@@ -16,7 +16,7 @@ function OwnerAuditoria() {
     queryKey: ["audit-log", actionFilter],
     queryFn: async () => {
       let query = supabase.from("audit_log")
-        .select("*, profiles!audit_log_actor_id_fkey(first_name,last_name,email)")
+        .select("*, profiles!audit_log_actor_id_fkey(id, first_name, last_name, email)")
         .order("created_at", { ascending: false });
       
       if (actionFilter !== "all") {

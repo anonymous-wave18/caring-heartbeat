@@ -23,17 +23,24 @@ function AdminPagamentos() {
     enabled: !!myId,
     queryFn: async () => {
       let query = supabase.from("payments")
-        .select("*, payment_proofs(id,file_path,file_name,created_at)");
+        .select(`
+          *,
+          payment_proofs(id,file_path,file_name,created_at),
+          profiles!payments_user_id_fkey(id, first_name, last_name, email, recruited_by)
+        `);
       if (filter !== "all") query = query.eq("status", filter);
-      if (scope === "mine" && myId) query = query.eq("recruiter_admin_id", myId);
+      
       const { data, error } = await query.order("week_start", { ascending: false });
       if (error) throw error;
-      const rows = data ?? [];
-      const uids = Array.from(new Set(rows.map((r: any) => r.user_id)));
-      if (uids.length === 0) return rows;
-      const { data: profs } = await supabase.from("profiles").select("id,first_name,last_name,email").in("id", uids);
-      const byId = new Map((profs ?? []).map((p: any) => [p.id, p]));
-      return rows.map((r: any) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
+      
+      let rows = (data ?? []) as any[];
+      
+      // Filter by "mine" (recruited_by) client-side or we'd need a complex join filter
+      if (scope === "mine" && myId) {
+        rows = rows.filter(r => r.profiles?.recruited_by === myId || r.recruiter_admin_id === myId);
+      }
+      
+      return rows;
     },
   });
 
@@ -87,11 +94,11 @@ function AdminPagamentos() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
           {(["mine","all"] as const).map((s) => (
             <button key={s} onClick={() => setScope(s)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+              className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition-all ${
                 scope === s ? "bg-primary text-primary-foreground ring-primary" : "bg-surface ring-border hover:bg-surface-muted"
               }`}>
               {s === "mine" ? "Meus recrutados" : "Todos"}
@@ -100,17 +107,37 @@ function AdminPagamentos() {
           <span className="mx-1 text-muted-foreground">•</span>
           {(["submitted", "pending", "approved", "overdue", "all"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+              className={`rounded-full px-3 py-1 text-xs font-medium ring-1 transition-all ${
                 filter === f ? "bg-primary text-primary-foreground ring-primary" : "bg-surface ring-border hover:bg-surface-muted"
               }`}>
               {f === "submitted" ? "Aguardando aprovação" : f === "pending" ? "Pendentes" : f === "approved" ? "Aprovados" : f === "overdue" ? "Vencidos" : "Todos"}
             </button>
           ))}
         </div>
-        <button onClick={() => generateAll.mutate()} disabled={generateAll.isPending}
-          className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          Gerar cobrança da semana
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => {
+            const csv = [
+              ["Membro", "Email", "Semana", "Vencimento", "Valor", "Status"].join(","),
+              ...filtered.map((p: any) => [
+                `${p.profiles?.first_name} ${p.profiles?.last_name}`,
+                p.profiles?.email,
+                p.week_start,
+                p.due_date,
+                p.amount,
+                p.status
+              ].join(","))
+            ].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = `pagamentos_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+          }} className="inline-flex items-center gap-1 rounded-md bg-surface px-3 py-2 text-sm font-medium ring-1 ring-border hover:bg-surface-muted">
+            <Download className="size-4" /> Exportar CSV
+          </button>
+          <button onClick={() => generateAll.mutate()} disabled={generateAll.isPending}
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Gerar cobrança da semana
+          </button>
+        </div>
       </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

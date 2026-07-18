@@ -17,8 +17,8 @@ function AdminDocumentos() {
     queryFn: async () => {
       const { data, error } = await supabase.from("recruitment_documents")
         .select(`
-          *,
-          profiles:user_id(first_name, last_name, email)
+          id, user_id, file_path, file_name, kind, created_at,
+          profiles(first_name, last_name, email)
         `)
         .order("created_at", { ascending: false });
       if (error) {

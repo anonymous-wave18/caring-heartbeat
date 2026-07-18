@@ -1,0 +1,21 @@
+{
+  "name": "Malta Manager",
+  "short_name": "Malta",
+  "description": "Plataforma de Gestão Profissional Organização Malta",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "https://id-preview--823e4300-4c38-40fc-aa8f-441b3a907147.lovable.app/og-image.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://id-preview--823e4300-4c38-40fc-aa8f-441b3a907147.lovable.app/og-image.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

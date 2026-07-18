@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2 } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 
@@ -98,30 +98,45 @@ function ChatPage() {
       `}>
         <div className="flex items-center justify-between border-b border-border px-4 py-3 text-sm font-medium">
           Conversas
-          <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
+          <div className="flex items-center gap-1">
+            <button title="Enviar Feedback" className="rounded-md p-1 hover:bg-primary/10 text-primary" onClick={() => toast.info("Feedback: Envie sua mensagem no chat de Suporte.")}><Shield className="size-4" /></button>
+            <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
+          </div>
         </div>
         <ul className="divide-y divide-border overflow-y-auto max-h-[calc(100vh-220px)]">
           {(threadsQ.data ?? []).map((t) => {
             const memberProf = t.member_id ? sidebarProfilesQ.data?.get(t.member_id) : null;
-            const label = t.kind === "general"
-              ? "geral"
-              : isStaff && memberProf
-                ? displayName(memberProf)
-                : (t.title ?? "Suporte");
+            let label = t.title ?? "Conversa";
+            
+            if (t.kind === "general") {
+              label = "geral";
+            } else if (t.kind === "direct") {
+              if (isStaff && memberProf) {
+                label = displayName(memberProf);
+              } else if (!isStaff) {
+                label = "Suporte Administrativo";
+              }
+            }
+
             return (
               <li key={t.id}>
                 <button onClick={() => { setSelected(t.id); setSidebarOpen(false); }}
-                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 ${
-                    selected === t.id ? "bg-primary/10 text-primary" : "hover:bg-surface-muted"
+                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 ${
+                    selected === t.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-surface-muted"
                   }`}>
-                  {t.kind === "general" ? <Hash className="size-4" /> : <UserIcon className="size-4" />}
-                  <span className="truncate">{label}</span>
+                  <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[10px]">
+                    {t.kind === "general" ? <Hash className="size-4" /> : (memberProf?.avatar_url ? <img src={memberProf.avatar_url} alt="" className="size-full object-cover" /> : <UserIcon className="size-4" />)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate">{label}</div>
+                    {t.last_message_body && <div className="truncate text-[11px] text-muted-foreground font-normal">{t.last_message_body}</div>}
+                  </div>
                 </button>
               </li>
             );
           })}
           {threadsQ.data && threadsQ.data.length === 0 && (
-            <li className="px-4 py-3 text-sm text-muted-foreground">Nenhuma conversa.</li>
+            <li className="px-4 py-3 text-sm text-muted-foreground text-center">Nenhuma conversa encontrada.</li>
           )}
         </ul>
       </aside>
@@ -277,11 +292,17 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
         {msgsQ.data && msgsQ.data.length === 0 && <div className="text-center text-sm text-muted-foreground">Sem mensagens ainda.</div>}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(); }}
-        className="flex gap-2 border-t border-border p-2 sm:p-3">
-        <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input" />
+        className="flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
+        <button type="button" className="p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-primary/5 transition-colors" title="Gravar áudio">
+          <Mic className="size-5" />
+        </button>
+        <div className="relative flex-1">
+          <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input pr-10" />
+          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
+        </div>
         <button type="submit" disabled={!text.trim() || sendMut.isPending}
-          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-          <Send className="size-4" />
+          className="inline-flex items-center gap-1 rounded-full bg-primary p-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-primary/20">
+          <Send className="size-5" />
         </button>
       </form>
     </div>

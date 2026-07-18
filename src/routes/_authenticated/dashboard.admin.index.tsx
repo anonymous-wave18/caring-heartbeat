@@ -102,7 +102,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Membros Ativos (Recrutas)" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
+        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
         <MetricCard label="Pendentes" value={counts.pending} trend="ação requerida" highlight icon={<FileCheck className="size-4" />} />
         <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} icon={<TrendingUp className="size-4" />} />
         <MetricCard label="Total Cadastros" value={all.length} icon={<BarChart3 className="size-4" />} />

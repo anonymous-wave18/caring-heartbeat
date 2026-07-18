@@ -100,7 +100,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
       <div className="grid gap-4 md:grid-cols-3">
         <Card icon={CheckCircle2} label="Status" value="Ativo" tint="success" />
         <Card icon={FileText} label="Formulário" value={
-          profile.form_status === "approved" ? "Aprovado"
+          profile.form_status === "approved" || profile.status === "approved" ? "Aprovado"
           : profile.form_status === "submitted" ? "Em análise"
           : profile.form_status === "rejected" ? "Recusado" : "Não enviado"
         } />

@@ -15,14 +15,18 @@ export const Route = createFileRoute("/_authenticated/dashboard/perfil")({
 
 function PerfilPage() {
   const { user } = Route.useRouteContext();
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const viewId = searchParams.get("view_id") || user.id;
+  const isViewingSelf = viewId === user.id;
+  
   const queryClient = useQueryClient();
   const rolesQ = useRoles(user.id);
   const { isStaff } = computeRoleFlags(rolesQ.data);
 
   const profileQuery = useQuery({
-    queryKey: ["profile", user.id],
+    queryKey: ["profile", viewId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", viewId).single();
       if (error) throw error;
       return data as Profile;
     },
@@ -45,11 +49,17 @@ function PerfilPage() {
         <p className="mt-1 text-sm text-muted-foreground">Atualize suas informações pessoais e credenciais.</p>
       </div>
 
-      <AvatarSection profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
-      <ProfileForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
-      {isStaff && <AdminPixForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />}
-      <AchievementsSection userId={user.id} />
-      <PasswordForm />
+      <AvatarSection profile={profile} isOwner={isViewingSelf} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", viewId] })} />
+      {isViewingSelf ? (
+        <>
+          <ProfileForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
+          {isStaff && <AdminPixForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />}
+          <AchievementsSection userId={user.id} />
+          <PasswordForm />
+        </>
+      ) : (
+        <PublicProfileView profile={profile} currentUserId={user.id} />
+      )}
     </div>
   );
 }
@@ -98,7 +108,7 @@ function AdminPixForm({ profile, onUpdated }: { profile: any; onUpdated: () => v
   );
 }
 
-function AvatarSection({ profile, onUpdated }: { profile: Profile; onUpdated: () => void }) {
+function AvatarSection({ profile, isOwner, onUpdated }: { profile: Profile; isOwner: boolean; onUpdated: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const avatarUrl = useAvatarUrl(profile.avatar_url);
@@ -167,14 +177,16 @@ function AvatarSection({ profile, onUpdated }: { profile: Profile; onUpdated: ()
             e.target.value = "";
           }}
         />
-        <button
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
-        >
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-          Enviar foto
-        </button>
+        {isOwner && (
+          <button
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
+          >
+            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+            Enviar foto
+          </button>
+        )}
       </div>
     </section>
   );
@@ -383,6 +395,52 @@ function Field({
         maxLength={maxLength}
         className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none ring-primary/30 transition-all placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 disabled:opacity-60"
       />
+    </div>
+  );
+}
+
+function PublicProfileView({ profile, currentUserId }: { profile: Profile; currentUserId: string }) {
+  const followMut = useMutation({
+    mutationFn: async () => {
+      toast.success(`Seguindo ${profile.first_name}!`);
+    }
+  });
+
+  const startDMMut = useMutation({
+    mutationFn: async () => {
+      const { data: existing } = await supabase.from("chat_threads")
+        .select("id")
+        .eq("kind", "direct")
+        .eq("member_id", profile.id)
+        .maybeSingle();
+
+      if (existing) {
+        window.location.href = `/dashboard/chat?thread=${existing.id}`;
+      } else {
+        const { data: created } = await supabase.from("chat_threads").insert({
+          kind: "direct",
+          member_id: profile.id,
+          title: `DM: ${profile.first_name}`
+        }).select("id").single();
+        if (created) window.location.href = `/dashboard/chat?thread=${created.id}`;
+      }
+    }
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-3">
+        <button onClick={() => followMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Seguir</button>
+        <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border">Enviar Mensagem (DM)</button>
+      </div>
+      <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">
+        <h3 className="font-medium">Sobre</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div><div className="text-xs text-muted-foreground uppercase">Discord</div><div>{profile.discord_username || "—"}</div></div>
+          <div><div className="text-xs text-muted-foreground uppercase">Membro desde</div><div>{new Date(profile.created_at).toLocaleDateString("pt-BR")}</div></div>
+        </div>
+      </section>
+      <AchievementsSection userId={profile.id} />
     </div>
   );
 }

@@ -99,7 +99,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
+        <MetricCard label="Membros Ativos (Recrutas)" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
         <MetricCard label="Pendentes" value={counts.pending} trend="ação requerida" highlight icon={<FileCheck className="size-4" />} />
         <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} icon={<TrendingUp className="size-4" />} />
         <MetricCard label="Total Cadastros" value={all.length} icon={<BarChart3 className="size-4" />} />
@@ -157,10 +157,10 @@ function AdminPage() {
           <p className="mt-1 text-sm text-muted-foreground">Gerencie cadastros, aprovações e membros da Malta.</p>
         </div>
         <div className="flex flex-col items-end gap-1 rounded-lg bg-surface p-3 text-[10px] ring-1 ring-border">
-          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações do Dono</div>
+          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações de Conexão</div>
           <div className="flex gap-2">
             <div className="flex flex-col items-end">
-              <span className="text-muted-foreground">Supabase Login:</span>
+              <span className="text-muted-foreground">Login CLI:</span>
               <code className="font-mono text-primary font-bold">npx supabase login</code>
             </div>
             <div className="flex flex-col items-end">

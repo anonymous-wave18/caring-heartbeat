@@ -355,3 +355,14 @@ function AvatarImage({ path, fallback }: { path: string | null | undefined; fall
   if (path && (path.startsWith("http") || path.startsWith("blob:"))) return <img src={path} alt="" className="size-full object-cover" />;
   return <>{fallback}</>;
 }
+
+function initials(p: Profile | null) {
+  if (!p) return "?";
+  if (p.first_name) return p.first_name[0].toUpperCase();
+  return p.email[0].toUpperCase();
+}
+
+function displayName(p: Profile) {
+  if (p.first_name) return `${p.first_name} ${p.last_name ?? ""}`.trim();
+  return p.email;
+}

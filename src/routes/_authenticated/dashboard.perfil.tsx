@@ -16,8 +16,8 @@ export const Route = createFileRoute("/_authenticated/dashboard/perfil")({
 
 function PerfilPage() {
   const { user } = Route.useRouteContext();
-  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-  const viewId = searchParams.get("view_id") || user.id;
+  const { view_id: searchViewId } = Route.useSearch();
+  const viewId = searchViewId || user.id;
   const isViewingSelf = viewId === user.id;
   
   const queryClient = useQueryClient();

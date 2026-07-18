@@ -60,7 +60,6 @@ function AdminFormularios() {
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved",
-          status_internal: "approved",
           first_name: firstName,
           last_name: lastName,
           avatar_url: formDetails?.discord_avatar_url || null,

@@ -169,7 +169,10 @@ function AdminPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {p.status !== "approved" && (
                     <button
-                      onClick={() => decide.mutate({ id: p.id, status: "approved" })}
+                      onClick={() => {
+                        if (confirm(`Aprovar ${p.first_name ?? p.email}?`))
+                          decide.mutate({ id: p.id, status: "approved" });
+                      }}
                       disabled={decide.isPending}
                       className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
                     >
@@ -178,7 +181,11 @@ function AdminPage() {
                   )}
                   {p.status !== "rejected" && (
                     <button
-                      onClick={() => decide.mutate({ id: p.id, status: "rejected" })}
+                      onClick={() => {
+                        const reason = prompt("Motivo da rejeição (opcional):");
+                        if (reason !== null)
+                          decide.mutate({ id: p.id, status: "rejected" });
+                      }}
                       disabled={decide.isPending}
                       className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-destructive"
                     >
@@ -197,13 +204,27 @@ function AdminPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const csv = "ID,Nome,Email,Status,Formulario,PIX_Chave,PIX_Tipo,PIX_Beneficiario\n" + filtered.map(m => `${m.id},${m.first_name} ${m.last_name},${m.email},${m.status},${m.form_status},${m.pix_key ?? ""},${m.pix_key_type ?? ""},${m.pix_beneficiary ?? ""}`).join("\n");
-                      const blob = new Blob([csv], { type: 'text/csv' });
+                      const csvRows = filtered.map(m => {
+                        const row = [
+                          m.id,
+                          `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
+                          m.email,
+                          m.status,
+                          m.form_status,
+                          m.pix_key ?? "",
+                          m.pix_key_type ?? "",
+                          m.pix_beneficiary ?? ""
+                        ];
+                        return row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+                      });
+                      const header = "ID,Nome,Email,Status,Formulario,PIX_Chave,PIX_Tipo,PIX_Beneficiario";
+                      const csv = header + "\n" + csvRows.join("\n");
+                      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.setAttribute('hidden', '');
                       a.setAttribute('href', url);
-                      a.setAttribute('download', 'membros_malta.csv');
+                      a.setAttribute('download', `membros_malta_${new Date().toISOString().split('T')[0]}.csv`);
                       document.body.appendChild(a);
                       a.click();
                       document.body.removeChild(a);

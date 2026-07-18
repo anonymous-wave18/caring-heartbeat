@@ -26,7 +26,7 @@ function AdminPagamentos() {
         .select(`
           *,
           payment_proofs(id,file_path,file_name,created_at),
-          profiles!payments_user_id_fkey(id, first_name, last_name, email, recruited_by)
+          profiles:user_id(id, first_name, last_name, email, recruited_by)
         `);
       if (filter !== "all") query = query.eq("status", filter);
       

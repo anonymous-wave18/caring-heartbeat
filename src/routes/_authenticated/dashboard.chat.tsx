@@ -117,6 +117,8 @@ function ChatPage() {
                 label = displayName(memberProf);
               } else if (!isStaff) {
                 label = "Suporte Administrativo";
+              } else if (isStaff && !memberProf && t.member_id) {
+                 label = "Membro Desconhecido";
               }
             }
 

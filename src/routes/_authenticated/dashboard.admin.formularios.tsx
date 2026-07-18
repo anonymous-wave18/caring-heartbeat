@@ -33,34 +33,63 @@ function AdminFormularios() {
 
   const reviewMut = useMutation({
     mutationFn: async (args: { id: string; user_id: string; status: "approved" | "rejected"; notes?: string }) => {
-      const { data: fdata, error } = await supabase.from("recruitment_forms").update({
-        status: args.status, reviewed_at: new Date().toISOString(), review_notes: args.notes ?? null,
-      }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
-      if (error) throw error;
+      // 1. Update form status and get the desired cargo
+      const { data: fdata, error: fErr } = await supabase.from("recruitment_forms").update({
+        status: args.status, 
+        reviewed_at: new Date().toISOString(), 
+        review_notes: args.notes ?? null,
+      }).eq("id", args.id).select("cargo_desejado_id").single();
+      
+      if (fErr) throw fErr;
 
-      if (args.status === "approved" && fdata?.cargo_desejado_id) {
-        await supabase.from("profiles").update({
+      if (args.status === "approved") {
+        // 2. Get cargo details to check if it's an admin role
+        const { data: cargoData } = await supabase.from("cargos").select("is_staff").eq("id", fdata.cargo_desejado_id).maybeSingle();
+
+        // 3. Update profile
+        const { error: pErr } = await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved"
         }).eq("id", args.user_id);
-      } else if (args.status === "rejected") {
+        if (pErr) throw pErr;
+
+        // 4. Update user_roles if it's a staff cargo
+        if (cargoData?.is_staff) {
+          await supabase.from("user_roles").upsert({ 
+            user_id: args.user_id, 
+            role: "admin" 
+          }, { onConflict: "user_id,role" });
+        } else {
+          // Default to member role
+          await supabase.from("user_roles").upsert({ 
+            user_id: args.user_id, 
+            role: "member" 
+          }, { onConflict: "user_id,role" });
+        }
+      } else {
         await supabase.from("profiles").update({
           form_status: "rejected",
           status: "pending"
         }).eq("id", args.user_id);
       }
 
-      // Log action
+      // 5. Log action with device info
       await supabase.from("audit_log").insert({
         actor_id: meQ.data?.id,
         action: `form.${args.status}`,
         entity: "recruitment_forms",
         entity_id: args.id,
-        metadata: { notes: args.notes }
+        metadata: { 
+          notes: args.notes,
+          user_id: args.user_id,
+          ua: navigator.userAgent,
+          platform: navigator.platform
+        }
       });
 
+      // 6. Notify user
       await supabase.from("notifications").insert({
         user_id: args.user_id, type: "form",
         title: args.status === "approved" ? "Formulário aprovado!" : "Formulário recusado",

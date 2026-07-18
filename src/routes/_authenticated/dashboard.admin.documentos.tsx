@@ -18,7 +18,7 @@ function AdminDocumentos() {
       const { data, error } = await supabase.from("recruitment_documents")
         .select(`
           id, user_id, file_path, file_name, kind, created_at,
-          profiles(first_name, last_name, email)
+          profiles:user_id(first_name, last_name, email)
         `)
         .order("created_at", { ascending: false });
       if (error) {

@@ -251,7 +251,7 @@ function FormularioPage() {
             <input type="date" disabled={readOnly} className="input" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
           </Field>}
           {show("cpf") && <Field label={lbl("cpf")} required={req("cpf")}>
-            <input disabled={readOnly} className="input" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: maskCPF(e.target.value) })} placeholder="000.000.000-00" inputMode="numeric" />
+            <input disabled={readOnly} className="input" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: maskCPF(e.target.value) })} placeholder="000.000.000-00" inputMode="numeric" maxLength={14} />
           </Field>}
           {show("bank_name") && <Field label={lbl("bank_name")} required={req("bank_name")}>
             <input disabled={readOnly} className="input" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
@@ -272,13 +272,13 @@ function FormularioPage() {
         <h2 className="text-lg font-medium">📞 Contato</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {show("phone_self") && <Field label={lbl("phone_self")} required={req("phone_self")}>
-            <input disabled={readOnly} className="input" value={form.phone_self} onChange={(e) => setForm({ ...form, phone_self: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" />
+            <input disabled={readOnly} className="input" value={form.phone_self} onChange={(e) => setForm({ ...form, phone_self: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" maxLength={15} />
           </Field>}
           {show("phone_father") && <Field label={lbl("phone_father")} required={req("phone_father")}>
-            <input disabled={readOnly} className="input" value={form.phone_father} onChange={(e) => setForm({ ...form, phone_father: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" />
+            <input disabled={readOnly} className="input" value={form.phone_father} onChange={(e) => setForm({ ...form, phone_father: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" maxLength={15} />
           </Field>}
           {show("phone_mother") && <Field label={lbl("phone_mother")} required={req("phone_mother")}>
-            <input disabled={readOnly} className="input" value={form.phone_mother} onChange={(e) => setForm({ ...form, phone_mother: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" />
+            <input disabled={readOnly} className="input" value={form.phone_mother} onChange={(e) => setForm({ ...form, phone_mother: maskPhone(e.target.value) })} placeholder="(00) 00000-0000" inputMode="tel" maxLength={15} />
           </Field>}
         </div>
       </section>

@@ -15,9 +15,16 @@ function AdminDocumentos() {
   const docsQ = useQuery({
     queryKey: ["all-docs"],
     queryFn: async () => {
-      const { data } = await supabase.from("recruitment_documents")
-        .select("*, profiles!recruitment_documents_user_id_fkey(first_name,last_name,email)")
+      const { data, error } = await supabase.from("recruitment_documents")
+        .select(`
+          *,
+          profiles:user_id(first_name, last_name, email)
+        `)
         .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Erro ao buscar documentos:", error);
+        return [];
+      }
       return data ?? [];
     },
   });

@@ -44,7 +44,8 @@ function AdminFormularios() {
         await supabase.from("profiles").update({
           cargo_id: recCargo?.id ?? fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
-          form_status: "approved"
+          form_status: "approved",
+          status: "approved"
         }).eq("id", args.user_id);
       }
       await supabase.from("notifications").insert({

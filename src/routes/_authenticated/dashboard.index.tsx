@@ -115,7 +115,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
           desc="Necessário para liberar pagamentos e chat completo." />
       )}
 
-      {profile.form_status === "approved" && nextPaymentQ.data && (
+      {(profile.form_status === "approved" || profile.status === "approved") && nextPaymentQ.data && (
         <div className="rounded-xl bg-primary/5 p-6 ring-1 ring-primary/20 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-primary uppercase tracking-wider flex items-center gap-2">

@@ -32,6 +32,9 @@ export type Profile = {
   avatar_url: string | null;
   status: "pending" | "approved" | "rejected";
   form_status: "not_submitted" | "submitted" | "approved" | "rejected";
+  pix_key: string | null;
+  pix_key_type: string | null;
+  pix_beneficiary: string | null;
   created_at: string;
 };
 

@@ -105,7 +105,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
           : profile.form_status === "rejected" ? "Recusado" : "Não enviado"
         } />
         <Card icon={CreditCard} label="Pagamento semanal"
-          value={profile.form_status === "approved"
+          value={profile.form_status === "approved" || profile.status === "approved"
             ? (nextPaymentQ.data ? `${daysLeft !== null && daysLeft >= 0 ? `${daysLeft} dias para pagar` : daysLeft !== null ? "Vencido" : "Aguardando"} · ${formatBRL(nextPaymentQ.data.amount)}` : "Em dia")
             : "Bloqueado"} />
       </div>

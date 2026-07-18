@@ -77,7 +77,7 @@ function AdminPage() {
   const counts = {
     all: all.length,
     pending: all.filter((p) => p.status === "pending").length,
-    approved: all.filter((p) => p.status === "approved" && !(p as any).user_roles?.some((r: any) => r.role === 'admin' || r.role === 'owner')).length,
+    approved: all.filter((p) => p.status === "approved").length,
     rejected: all.filter((p) => p.status === "rejected").length,
   };
 

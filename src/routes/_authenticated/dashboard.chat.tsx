@@ -5,6 +5,7 @@ import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Tras
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
+import { useAvatarUrl } from "@/lib/useAvatarUrl";
 
 export const Route = createFileRoute("/_authenticated/dashboard/chat")({
   component: ChatPage,
@@ -238,7 +239,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   onClick={() => window.location.href = `/dashboard/membros?id=${m.sender_id}`}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
-                  {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
+                  <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
                 </button>
               )}
               <div className="relative group/msg max-w-[85%] sm:max-w-[75%]">
@@ -273,7 +274,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   onClick={() => window.location.href = `/dashboard/perfil`}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary hover:ring-primary transition-all focus:ring-2"
                 >
-                  {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover" /> : initials(p)}
+                  <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
                 </button>
               )}
             </div>

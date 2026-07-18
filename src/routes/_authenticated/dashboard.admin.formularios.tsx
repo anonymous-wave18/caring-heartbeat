@@ -171,6 +171,7 @@ function FormDetail({ form, onClose, onApprove, onReject }: {
           <Info label="Experiência" value={form.experience ?? "—"} full />
           <Info label="Motivação" value={form.motivation ?? "—"} full />
           <Info label="Indicado por" value={form.referred_by ?? "—"} />
+          <Info label="Comprovante Residência" value={form.address_proof ?? "—"} />
         </dl>
         {form.location_lat && form.location_lng && (
           <a target="_blank" rel="noreferrer"

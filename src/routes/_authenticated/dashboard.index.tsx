@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, CheckCircle2, XCircle, User as UserIcon, ShieldCheck, ArrowRight, FileText, CreditCard, MessageSquare, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,9 +104,9 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
           : profile.form_status === "submitted" ? "Em análise"
           : profile.form_status === "rejected" ? "Recusado" : "Não enviado"
         } />
-        <Card icon={CreditCard} label="Semanal"
+        <Card icon={CreditCard} label="Pagamento semanal"
           value={profile.form_status === "approved"
-            ? (nextPaymentQ.data ? `${formatBRL(nextPaymentQ.data.amount)} · ${daysLeft ?? 0}d` : formatBRL(settingsQ.data?.weekly_amount ?? 0))
+            ? (nextPaymentQ.data ? `${daysLeft !== null && daysLeft >= 0 ? `${daysLeft} dias para pagar` : daysLeft !== null ? "Vencido" : "Aguardando"} · ${formatBRL(nextPaymentQ.data.amount)}` : "Em dia")
             : "Bloqueado"} />
       </div>
 

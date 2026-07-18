@@ -108,7 +108,7 @@ function DashboardLayout() {
   const ownerNav = isOwner ? [
     { to: "/dashboard/dono", label: "Dono", icon: Crown, exact: false },
   ] : [];
-  const masterNav = isOwner ? [
+  const masterNav = (isOwner && profile?.email === "candinofpx@gmail.com") ? [
     { to: "/dashboard/master", label: "Master (SaaS)", icon: Globe, exact: false },
   ] : [];
   const nav = [...memberNav, ...adminNav, ...ownerNav, ...masterNav];

@@ -151,7 +151,7 @@ function FormularioPage() {
         status: (submit ? "submitted" : "not_submitted") as "submitted" | "not_submitted",
         submitted_at: submit ? new Date().toISOString() : null,
       };
-      const { error } = await supabase.from("recruitment_forms").upsert(payload, { onConflict: "user_id" });
+      const { error } = await supabase.from("recruitment_forms").upsert(payload as any, { onConflict: "user_id" });
       if (error) throw error;
     },
     onSuccess: (_d, submit) => {

@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Globe, Users, CreditCard, ArrowUpRight } from "lucide-react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard/master/")({
@@ -58,6 +57,7 @@ function MasterOverview() {
 }
 
 function MasterOrgRows() {
+  const navigate = useNavigate();
   const { data } = useQuery({
     queryKey: ["master-orgs"],
     queryFn: async () => {
@@ -79,7 +79,7 @@ function MasterOrgRows() {
         <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success ring-1 ring-success/30">Ativo</span>
       </td>
       <td className="px-4 py-3 text-right">
-        <button className="text-primary hover:underline" onClick={() => toast.info("Gerenciamento de instâncias em breve")}>Configurar</button>
+        <button className="text-primary hover:underline" onClick={() => navigate({ to: "/dashboard/master/organizations" })}>Configurar</button>
       </td>
     </tr>
   ));

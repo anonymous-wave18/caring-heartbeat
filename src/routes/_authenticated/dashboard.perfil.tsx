@@ -10,6 +10,7 @@ import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import type { Profile } from "./dashboard";
 
 export const Route = createFileRoute("/_authenticated/dashboard/perfil")({
+  validateSearch: (search) => z.object({ view_id: z.string().optional() }).parse(search),
   component: PerfilPage,
 });
 

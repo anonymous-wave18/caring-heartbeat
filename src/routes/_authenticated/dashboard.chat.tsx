@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 

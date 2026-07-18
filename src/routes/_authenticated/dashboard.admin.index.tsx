@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Search, Trash2, Loader2 } from "lucide-react";
+import { Check, X, Search, Trash2, Loader2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
 

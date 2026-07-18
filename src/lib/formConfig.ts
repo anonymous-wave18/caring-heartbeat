@@ -5,7 +5,7 @@ export type FieldKey =
   | "cargo_desejado_id" | "full_name" | "birth_date" | "cpf"
   | "bank_name" | "bank_holder" | "discord_contact" | "discord_avatar_url"
   | "phone_self" | "phone_father" | "phone_mother"
-  | "availability" | "experience" | "motivation" | "referred_by" | "location";
+  | "availability" | "experience" | "motivation" | "referred_by" | "location" | "address_proof";
 
 export type FieldCfg = { label: string; required: boolean; hidden: boolean };
 export type DocCfg = { key: string; label: string; accept: string; required: boolean; hint?: string };

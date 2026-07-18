@@ -5,7 +5,7 @@ import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Tras
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
-import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { useAvatarUrl, AvatarImage } from "@/lib/useAvatarUrl";
 
 export const Route = createFileRoute("/_authenticated/dashboard/chat")({
   component: ChatPage,
@@ -331,8 +331,13 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
           <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
           
           {/* Swipe UI simulator placeholder */}
-          <div className="absolute -top-8 left-0 hidden group-focus-within/input:flex items-center gap-1 text-[10px] text-muted-foreground animate-bounce">
-            <Reply className="size-3" /> Deslize para responder (em breve)
+          <div className="absolute -top-12 left-0 hidden group-focus-within/input:flex flex-col gap-1 text-[10px] text-muted-foreground animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center gap-1 font-medium text-primary">
+              <Mic className="size-3" /> Segure para gravar áudio (em breve)
+            </div>
+            <div className="flex items-center gap-1">
+              <Reply className="size-3" /> Deslize para responder (em breve)
+            </div>
           </div>
         </div>
         <button type="submit" disabled={!text.trim() || sendMut.isPending}

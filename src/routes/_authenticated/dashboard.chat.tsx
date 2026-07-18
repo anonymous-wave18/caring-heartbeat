@@ -238,6 +238,16 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             </div>
           );
         })}
+        {typingUsers.size > 0 && (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground animate-pulse">
+            <div className="flex gap-0.5">
+              <span className="size-1 rounded-full bg-muted-foreground/50" />
+              <span className="size-1 rounded-full bg-muted-foreground/50" />
+              <span className="size-1 rounded-full bg-muted-foreground/50" />
+            </div>
+            {Array.from(typingUsers).map(id => displayName(profsQ.data?.get(id))).join(", ")} está digitando...
+          </div>
+        )}
         {msgsQ.data && msgsQ.data.length === 0 && <div className="text-center text-sm text-muted-foreground">Sem mensagens ainda.</div>}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(); }}

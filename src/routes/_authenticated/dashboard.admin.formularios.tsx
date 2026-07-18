@@ -50,15 +50,20 @@ function AdminFormularios() {
         const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
 
         // 4. Update profile with info from form
+        const fullName = formDetails?.full_name || "";
+        const nameParts = fullName.split(" ");
+        const firstName = nameParts[0] || null;
+        const lastName = nameParts.slice(1).join(" ") || null;
+
         const { error: pErr } = await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved",
-          first_name: formDetails?.full_name?.split(" ")[0] || null,
-          last_name: formDetails?.full_name?.split(" ").slice(1).join(" ") || null,
+          first_name: firstName,
+          last_name: lastName,
           avatar_url: formDetails?.discord_avatar_url || null,
-          pix_key: formDetails?.bank_name || null, // Fallback or dedicated field? User mentioned PIX.
+          pix_key: formDetails?.bank_name || null,
         }).eq("id", args.user_id);
         if (pErr) throw pErr;
 

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, CheckCircle2, XCircle, User as UserIcon, ShieldCheck, ArrowRight, FileText, CreditCard, MessageSquare, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";

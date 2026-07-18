@@ -12,14 +12,14 @@ function MasterOverview() {
   const statsQ = useQuery({
     queryKey: ["master-stats"],
     queryFn: async () => {
-      const { data: orgs } = await supabase.from("organizations" as any).select("*", { count: "exact" });
+      const { data: orgs } = await supabase.from("organizations" as any).select("*");
       const { count: users } = await supabase.from("profiles").select("*", { count: "exact", head: true });
       const { data: rev } = await supabase.from("payments").select("amount").eq("status", "approved");
       
       return {
-        orgs: orgs?.length ?? 1,
+        orgs: orgs?.length ?? 0,
         totalUsers: users ?? 0,
-        activeSubs: orgs?.length ?? 1,
+        activeSubs: orgs?.length ?? 0,
         mrr: rev?.reduce((acc, curr) => acc + curr.amount, 0) ?? 0
       };
     }

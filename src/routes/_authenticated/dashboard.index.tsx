@@ -110,7 +110,7 @@ function ApprovedHome({ profile, isStaff, userId }: { profile: Profile; isStaff:
             : "Bloqueado"} />
       </div>
 
-      {profile.form_status !== "approved" && (
+      {profile.form_status !== "approved" && profile.status !== "approved" && (
         <ActionCard to="/dashboard/formulario" icon={FileText} title="Complete seu formulário"
           desc="Necessário para liberar pagamentos e chat completo." />
       )}

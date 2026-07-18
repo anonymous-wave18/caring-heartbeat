@@ -228,6 +228,18 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
     },
   });
 
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("chat_messages").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["messages", threadId] });
+      toast.success("Mensagem apagada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
@@ -265,10 +277,20 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   </div>
                 </div>
                 
-                {/* Ações de mensagem (simuladas UI) */}
+                {/* Ações de mensagem */}
                 <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1 transition-all`}>
-                   <button className="p-1.5 hover:bg-surface-muted rounded-full text-muted-foreground transition-colors" title="Responder"><Reply className="size-3.5" /></button>
-                   {isMe && <button className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full text-muted-foreground transition-colors" title="Apagar"><Trash2 className="size-3.5" /></button>}
+                   <button className="p-1.5 hover:bg-surface-muted rounded-full text-muted-foreground transition-colors" title="Responder" onClick={() => toast.info("Funcionalidade de resposta em breve")}><Reply className="size-3.5" /></button>
+                   {isMe && (
+                     <button 
+                       className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full text-muted-foreground transition-colors" 
+                       title="Apagar" 
+                       onClick={() => {
+                         if (confirm("Deseja apagar esta mensagem?")) deleteMut.mutate(m.id);
+                       }}
+                     >
+                       <Trash2 className="size-3.5" />
+                     </button>
+                   )}
                 </div>
               </div>
               {isMe && (

@@ -16,11 +16,13 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedDashboardPerfilRouteImport } from './routes/_authenticated/dashboard.perfil'
 import { Route as AuthenticatedDashboardPagamentosRouteImport } from './routes/_authenticated/dashboard.pagamentos'
+import { Route as AuthenticatedDashboardMasterRouteImport } from './routes/_authenticated/dashboard.master'
 import { Route as AuthenticatedDashboardFormularioRouteImport } from './routes/_authenticated/dashboard.formulario'
 import { Route as AuthenticatedDashboardDonoRouteImport } from './routes/_authenticated/dashboard.dono'
 import { Route as AuthenticatedDashboardChatRouteImport } from './routes/_authenticated/dashboard.chat'
 import { Route as AuthenticatedDashboardAvisosRouteImport } from './routes/_authenticated/dashboard.avisos'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard.admin'
+import { Route as AuthenticatedDashboardMasterIndexRouteImport } from './routes/_authenticated/dashboard.master.index'
 import { Route as AuthenticatedDashboardDonoIndexRouteImport } from './routes/_authenticated/dashboard.dono.index'
 import { Route as AuthenticatedDashboardAdminIndexRouteImport } from './routes/_authenticated/dashboard.admin.index'
 import { Route as AuthenticatedDashboardDonoRepassesRouteImport } from './routes/_authenticated/dashboard.dono.repasses'
@@ -72,6 +74,12 @@ const AuthenticatedDashboardPagamentosRoute =
     path: '/pagamentos',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMasterRoute =
+  AuthenticatedDashboardMasterRouteImport.update({
+    id: '/master',
+    path: '/master',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardFormularioRoute =
   AuthenticatedDashboardFormularioRouteImport.update({
     id: '/formulario',
@@ -101,6 +109,12 @@ const AuthenticatedDashboardAdminRoute =
     id: '/admin',
     path: '/admin',
     getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMasterIndexRoute =
+  AuthenticatedDashboardMasterIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardMasterRoute,
   } as any)
 const AuthenticatedDashboardDonoIndexRoute =
   AuthenticatedDashboardDonoIndexRouteImport.update({
@@ -190,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/chat': typeof AuthenticatedDashboardChatRoute
   '/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
   '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/dashboard/master': typeof AuthenticatedDashboardMasterRouteWithChildren
   '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -206,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
+  '/dashboard/master/': typeof AuthenticatedDashboardMasterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -229,6 +245,7 @@ export interface FileRoutesByTo {
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminIndexRoute
   '/dashboard/dono': typeof AuthenticatedDashboardDonoIndexRoute
+  '/dashboard/master': typeof AuthenticatedDashboardMasterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,6 +258,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/chat': typeof AuthenticatedDashboardChatRoute
   '/_authenticated/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
   '/_authenticated/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/_authenticated/dashboard/master': typeof AuthenticatedDashboardMasterRouteWithChildren
   '/_authenticated/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/_authenticated/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -257,6 +275,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/_authenticated/dashboard/admin/': typeof AuthenticatedDashboardAdminIndexRoute
   '/_authenticated/dashboard/dono/': typeof AuthenticatedDashboardDonoIndexRoute
+  '/_authenticated/dashboard/master/': typeof AuthenticatedDashboardMasterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -269,6 +288,7 @@ export interface FileRouteTypes {
     | '/dashboard/chat'
     | '/dashboard/dono'
     | '/dashboard/formulario'
+    | '/dashboard/master'
     | '/dashboard/pagamentos'
     | '/dashboard/perfil'
     | '/dashboard/'
@@ -285,6 +305,7 @@ export interface FileRouteTypes {
     | '/dashboard/dono/repasses'
     | '/dashboard/admin/'
     | '/dashboard/dono/'
+    | '/dashboard/master/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -308,6 +329,7 @@ export interface FileRouteTypes {
     | '/dashboard/dono/repasses'
     | '/dashboard/admin'
     | '/dashboard/dono'
+    | '/dashboard/master'
   id:
     | '__root__'
     | '/'
@@ -319,6 +341,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/chat'
     | '/_authenticated/dashboard/dono'
     | '/_authenticated/dashboard/formulario'
+    | '/_authenticated/dashboard/master'
     | '/_authenticated/dashboard/pagamentos'
     | '/_authenticated/dashboard/perfil'
     | '/_authenticated/dashboard/'
@@ -335,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/dono/repasses'
     | '/_authenticated/dashboard/admin/'
     | '/_authenticated/dashboard/dono/'
+    | '/_authenticated/dashboard/master/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -394,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPagamentosRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/master': {
+      id: '/_authenticated/dashboard/master'
+      path: '/master'
+      fullPath: '/dashboard/master'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/formulario': {
       id: '/_authenticated/dashboard/formulario'
       path: '/formulario'
@@ -428,6 +459,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/admin'
       preLoaderRoute: typeof AuthenticatedDashboardAdminRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/master/': {
+      id: '/_authenticated/dashboard/master/'
+      path: '/'
+      fullPath: '/dashboard/master/'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardMasterRoute
     }
     '/_authenticated/dashboard/dono/': {
       id: '/_authenticated/dashboard/dono/'
@@ -585,12 +623,28 @@ const AuthenticatedDashboardDonoRouteWithChildren =
     AuthenticatedDashboardDonoRouteChildren,
   )
 
+interface AuthenticatedDashboardMasterRouteChildren {
+  AuthenticatedDashboardMasterIndexRoute: typeof AuthenticatedDashboardMasterIndexRoute
+}
+
+const AuthenticatedDashboardMasterRouteChildren: AuthenticatedDashboardMasterRouteChildren =
+  {
+    AuthenticatedDashboardMasterIndexRoute:
+      AuthenticatedDashboardMasterIndexRoute,
+  }
+
+const AuthenticatedDashboardMasterRouteWithChildren =
+  AuthenticatedDashboardMasterRoute._addFileChildren(
+    AuthenticatedDashboardMasterRouteChildren,
+  )
+
 interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRouteWithChildren
   AuthenticatedDashboardAvisosRoute: typeof AuthenticatedDashboardAvisosRoute
   AuthenticatedDashboardChatRoute: typeof AuthenticatedDashboardChatRoute
   AuthenticatedDashboardDonoRoute: typeof AuthenticatedDashboardDonoRouteWithChildren
   AuthenticatedDashboardFormularioRoute: typeof AuthenticatedDashboardFormularioRoute
+  AuthenticatedDashboardMasterRoute: typeof AuthenticatedDashboardMasterRouteWithChildren
   AuthenticatedDashboardPagamentosRoute: typeof AuthenticatedDashboardPagamentosRoute
   AuthenticatedDashboardPerfilRoute: typeof AuthenticatedDashboardPerfilRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -606,6 +660,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardDonoRouteWithChildren,
     AuthenticatedDashboardFormularioRoute:
       AuthenticatedDashboardFormularioRoute,
+    AuthenticatedDashboardMasterRoute:
+      AuthenticatedDashboardMasterRouteWithChildren,
     AuthenticatedDashboardPagamentosRoute:
       AuthenticatedDashboardPagamentosRoute,
     AuthenticatedDashboardPerfilRoute: AuthenticatedDashboardPerfilRoute,

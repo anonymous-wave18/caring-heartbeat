@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LogOut, ShieldCheck, LayoutDashboard, Users, UserCircle, Loader2,
-  FileText, CreditCard, MessageSquare, Megaphone, Crown, Bell, Menu, X,
+  FileText, CreditCard, MessageSquare, Megaphone, Crown, Bell, Menu, X, Globe,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
@@ -108,7 +108,10 @@ function DashboardLayout() {
   const ownerNav = isOwner ? [
     { to: "/dashboard/dono", label: "Dono", icon: Crown, exact: false },
   ] : [];
-  const nav = [...memberNav, ...adminNav, ...ownerNav];
+  const masterNav = isOwner ? [
+    { to: "/dashboard/master", label: "Master", icon: Globe, exact: false },
+  ] : [];
+  const nav = [...memberNav, ...adminNav, ...ownerNav, ...masterNav];
 
   const approved = profile?.status === "approved";
   const initial = (profile?.first_name ?? "?").charAt(0).toUpperCase();

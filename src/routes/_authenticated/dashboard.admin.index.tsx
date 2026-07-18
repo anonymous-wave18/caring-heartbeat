@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Search, Trash2, Loader2, Download } from "lucide-react";
+import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileCheck, BarChart3 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
 
@@ -77,12 +78,77 @@ function AdminPage() {
     rejected: all.filter((p) => p.status === "rejected").length,
   };
 
+  const chartData = useMemo(() => {
+    return [
+      { name: "Pendentes", value: counts.pending, color: "#f59e0b" },
+      { name: "Aprovados", value: counts.approved, color: "#10b981" },
+      { name: "Rejeitados", value: counts.rejected, color: "#ef4444" },
+    ];
+  }, [counts]);
+
+  const growthData = useMemo(() => {
+    // Group by month
+    const groups: Record<string, number> = {};
+    all.forEach(p => {
+      const month = new Date(p.created_at).toLocaleDateString("pt-BR", { month: "short" });
+      groups[month] = (groups[month] || 0) + 1;
+    });
+    return Object.entries(groups).map(([name, total]) => ({ name, total }));
+  }, [all]);
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" />
-        <MetricCard label="Formulários Pendentes" value={counts.pending} trend="ação requerida" highlight />
-        <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
+        <MetricCard label="Pendentes" value={counts.pending} trend="ação requerida" highlight icon={<FileCheck className="size-4" />} />
+        <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} icon={<TrendingUp className="size-4" />} />
+        <MetricCard label="Total Cadastros" value={all.length} icon={<BarChart3 className="size-4" />} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl bg-surface p-6 ring-1 ring-border">
+          <h3 className="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-wider">Status de Recrutamento</h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }}
+                  itemStyle={{ color: "#fff" }}
+                />
+                <Legend verticalAlign="bottom" height={36}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-surface p-6 ring-1 ring-border">
+          <h3 className="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-wider">Crescimento Mensal</h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={growthData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }}
+                  itemStyle={{ color: "#fff" }}
+                />
+                <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -244,10 +310,13 @@ function AdminPage() {
   );
 }
 
-function MetricCard({ label, value, trend, highlight }: { label: string; value: string | number; trend?: string; highlight?: boolean }) {
+function MetricCard({ label, value, trend, highlight, icon }: { label: string; value: string | number; trend?: string; highlight?: boolean; icon?: React.ReactNode }) {
   return (
     <div className={`rounded-xl p-5 ring-1 ${highlight ? "bg-primary/5 ring-primary/20" : "bg-surface ring-border"}`}>
-      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+        {icon && <div className="text-muted-foreground opacity-50">{icon}</div>}
+      </div>
       <div className="mt-2 flex items-baseline gap-2">
         <div className="text-3xl font-bold tracking-tight">{value}</div>
         {trend && <div className={`text-[10px] font-medium ${highlight ? "text-primary" : "text-success"}`}>{trend}</div>}

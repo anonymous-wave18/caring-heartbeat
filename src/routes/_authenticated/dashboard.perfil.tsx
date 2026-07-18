@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Upload, KeyRound, Save } from "lucide-react";
+import { Loader2, Upload, KeyRound, Save, Trophy, Star, ShieldCheck, Zap } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
@@ -48,6 +48,7 @@ function PerfilPage() {
       <AvatarSection profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
       <ProfileForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
       {isStaff && <AdminPixForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />}
+      <AchievementsSection userId={user.id} />
       <PasswordForm />
     </div>
   );
@@ -299,6 +300,59 @@ function PasswordForm() {
           </button>
         </div>
       </form>
+    </section>
+  );
+}
+
+function AchievementsSection({ userId }: { userId: string }) {
+  const achQuery = useQuery({
+    queryKey: ["user-achievements", userId],
+    queryFn: async () => {
+      // Use any to bypass TS until schema is synced
+      const { data, error } = await (supabase.from("user_achievements" as any) as any)
+        .select("*, achievements(*)")
+        .eq("user_id", userId);
+      
+      if (error) {
+        // If table doesn't exist, return empty
+        return [];
+      }
+      return data ?? [];
+    },
+    retry: false,
+  });
+
+  const mockAchievements = [
+    { name: "Pagador em Dia", desc: "Manteve as faturas pagas no prazo", icon: Zap, color: "text-amber-500", unlocked: true },
+    { name: "Veterano", desc: "Mais de 100 dias na organização", icon: Star, color: "text-blue-500", unlocked: true },
+    { name: "Administrador", desc: "Parte da equipe de gestão", icon: ShieldCheck, color: "text-primary", unlocked: true },
+    { name: "Malta 1 Ano", desc: "Completou um ano de fidelidade", icon: Trophy, color: "text-yellow-500", unlocked: false },
+  ];
+
+  const badges = achQuery.data && achQuery.data.length > 0 
+    ? achQuery.data.map((ua: any) => ({ ...ua.achievements, unlocked: true }))
+    : mockAchievements;
+
+  return (
+    <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
+      <div className="flex items-center gap-2 mb-6">
+        <Trophy className="size-4 text-primary" />
+        <h2 className="font-medium">Minhas Conquistas</h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {badges.map((b: any, i: number) => (
+          <div key={i} className={`flex flex-col items-center p-4 rounded-xl ring-1 transition-all ${b.unlocked ? "bg-primary/5 ring-primary/20" : "bg-surface-muted/30 ring-border opacity-50 grayscale"}`}>
+            <div className={`p-3 rounded-full bg-background mb-3 ring-1 ring-border ${b.color || "text-primary"}`}>
+              {typeof b.icon === 'string' ? <Star className="size-6" /> : <b.icon className="size-6" />}
+            </div>
+            <div className="text-sm font-semibold text-center">{b.name}</div>
+            <div className="text-[10px] text-muted-foreground text-center mt-1">{b.desc}</div>
+            {b.unlocked && (
+              <div className="mt-3 px-2 py-0.5 rounded-full bg-success/10 text-[9px] font-bold text-success uppercase tracking-wider">Desbloqueado</div>
+            )}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

@@ -284,7 +284,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
                 <button 
-                  onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}
+                  onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
                   <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
@@ -296,7 +296,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                 }`}>
                   {!isMe && (
                     <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
+                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
                       {p?.is_staff && (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                           <Shield className="size-2.5" /> ADM

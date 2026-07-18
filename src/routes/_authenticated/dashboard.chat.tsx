@@ -166,9 +166,29 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
     const ch = supabase.channel(`msg-${threadId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
         () => qc.invalidateQueries({ queryKey: ["messages", threadId] }))
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = ch.presenceState();
+        const typing = new Set<string>();
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.isTyping && p.userId !== userId) typing.add(p.userId);
+          });
+        });
+        setTypingUsers(typing);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await ch.track({ userId, isTyping });
+        }
+      });
     return () => { supabase.removeChannel(ch); };
-  }, [threadId, qc]);
+  }, [threadId, qc, userId, isTyping]);
+
+  function handleTyping() {
+    if (!isTyping) setIsTyping(true);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+  }
 
   const sendMut = useMutation({
     mutationFn: async () => {

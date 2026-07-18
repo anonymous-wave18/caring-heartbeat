@@ -7,7 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
 
+import { z } from "zod";
+
 export const Route = createFileRoute("/_authenticated/dashboard/chat")({
+  validateSearch: (search) => z.object({ thread_id: z.string().optional() }).parse(search),
   component: ChatPage,
 });
 
@@ -80,16 +83,42 @@ function ChatPage() {
     }
   }, [userId, isStaff, threadsQ.data, qc]);
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const threadFromUrl = searchParams.get("thread");
-  const [selected, setSelected] = useState<string | null>(threadFromUrl);
+  const { thread_id: threadFromUrl } = Route.useSearch();
+  const [selected, setSelected] = useState<string | null>(threadFromUrl ?? null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
-    if (!selected && threadsQ.data && threadsQ.data.length > 0) {
-      setSelected(threadsQ.data[0].id);
+    async function resolveThread() {
+      if (threadFromUrl?.startsWith("dm:")) {
+        const memberId = threadFromUrl.split(":")[1];
+        if (!memberId) return;
+        
+        // Check if thread exists
+        const existing = threadsQ.data?.find(t => t.kind === "direct" && t.member_id === memberId);
+        if (existing) {
+          setSelected(existing.id);
+        } else if (isStaff) {
+          // Create new direct thread for staff
+          const { data, error } = await supabase.from("chat_threads").insert({
+            kind: "direct",
+            member_id: memberId,
+            title: "Privado"
+          }).select().single();
+          
+          if (!error && data) {
+            qc.invalidateQueries({ queryKey: ["threads"] });
+            setSelected(data.id);
+          }
+        }
+      } else if (!selected && threadsQ.data && threadsQ.data.length > 0) {
+        setSelected(threadsQ.data[0].id);
+      }
     }
-  }, [threadsQ.data, selected]);
+    
+    if (threadsQ.data) {
+      resolveThread();
+    }
+  }, [threadsQ.data, selected, threadFromUrl, isStaff, qc]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];
@@ -255,7 +284,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
               {!isMe && (
                 <button 
-                  onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}
+                  onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}
                   className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
                 >
                   <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
@@ -267,7 +296,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                 }`}>
                   {!isMe && (
                     <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
+                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
                       {p?.is_staff && (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                           <Shield className="size-2.5" /> ADM
@@ -331,8 +360,13 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
           <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
           
           {/* Swipe UI simulator placeholder */}
-          <div className="absolute -top-8 left-0 hidden group-focus-within/input:flex items-center gap-1 text-[10px] text-muted-foreground animate-bounce">
-            <Reply className="size-3" /> Deslize para responder (em breve)
+          <div className="absolute -top-12 left-0 hidden group-focus-within/input:flex flex-col gap-1 text-[10px] text-muted-foreground animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center gap-1 font-medium text-primary">
+              <Mic className="size-3" /> Segure para gravar áudio (em breve)
+            </div>
+            <div className="flex items-center gap-1">
+              <Reply className="size-3" /> Deslize para responder (em breve)
+            </div>
           </div>
         </div>
         <button type="submit" disabled={!text.trim() || sendMut.isPending}

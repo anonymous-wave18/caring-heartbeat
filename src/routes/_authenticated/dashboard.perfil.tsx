@@ -10,13 +10,14 @@ import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import type { Profile } from "./dashboard";
 
 export const Route = createFileRoute("/_authenticated/dashboard/perfil")({
+  validateSearch: (search) => z.object({ view_id: z.string().optional() }).parse(search),
   component: PerfilPage,
 });
 
 function PerfilPage() {
   const { user } = Route.useRouteContext();
-  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-  const viewId = searchParams.get("view_id") || user.id;
+  const { view_id: searchViewId } = Route.useSearch();
+  const viewId = searchViewId || user.id;
   const isViewingSelf = viewId === user.id;
   
   const queryClient = useQueryClient();
@@ -45,8 +46,8 @@ function PerfilPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-medium tracking-tight">Meu perfil</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Atualize suas informações pessoais e credenciais.</p>
+        <h1 className="text-3xl font-medium tracking-tight">{isViewingSelf ? "Meu perfil" : `Perfil de ${profile.first_name}`}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{isViewingSelf ? "Atualize suas informações pessoais e credenciais." : "Veja informações sobre este membro."}</p>
       </div>
 
       <AvatarSection profile={profile} isOwner={isViewingSelf} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", viewId] })} />
@@ -408,22 +409,7 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
 
   const startDMMut = useMutation({
     mutationFn: async () => {
-      const { data: existing } = await supabase.from("chat_threads")
-        .select("id")
-        .eq("kind", "direct")
-        .eq("member_id", profile.id)
-        .maybeSingle();
-
-      if (existing) {
-        window.location.href = `/dashboard/chat?thread=${existing.id}`;
-      } else {
-        const { data: created } = await supabase.from("chat_threads").insert({
-          kind: "direct",
-          member_id: profile.id,
-          title: `DM: ${profile.first_name}`
-        }).select("id").single();
-        if (created) window.location.href = `/dashboard/chat?thread=${created.id}`;
-      }
+      window.location.href = `/dashboard/chat?thread_id=dm:${profile.id}`;
     }
   });
 

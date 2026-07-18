@@ -31,7 +31,7 @@ function OwnerAuditoria() {
   const filtered = (logsQ.data ?? []).filter((l: any) => {
     if (!q) return true;
     const search = q.toLowerCase();
-    const actorName = `${l.profiles?.first_name} ${l.profiles?.last_name}`.toLowerCase();
+    const actorName = `${l.profiles?.first_name ?? ""} ${l.profiles?.last_name ?? ""}`.toLowerCase();
     const metadata = JSON.stringify(l.metadata).toLowerCase();
     return actorName.includes(search) || l.action.toLowerCase().includes(search) || metadata.includes(search);
   });
@@ -65,7 +65,7 @@ function OwnerAuditoria() {
           {filtered.map((l: any) => (
             <tr key={l.id} className="align-top hover:bg-surface-muted/50">
               <td className="px-4 py-2.5 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleString("pt-BR")}</td>
-              <td className="px-4 py-2.5">{l.profiles?.first_name} {l.profiles?.last_name}<div className="text-xs text-muted-foreground">{l.profiles?.email}</div></td>
+              <td className="px-4 py-2.5">{l.profiles?.first_name ?? "Sistema"} {l.profiles?.last_name ?? ""}<div className="text-xs text-muted-foreground">{l.profiles?.email}</div></td>
               <td className="px-4 py-2.5"><code className="text-xs">{l.action}</code></td>
               <td className="px-4 py-2.5 text-xs">{l.entity ?? "—"} <span className="text-muted-foreground">{l.entity_id ?? ""}</span></td>
               <td className="px-4 py-2.5 text-xs">

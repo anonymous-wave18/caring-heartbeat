@@ -16,6 +16,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedDashboardPerfilRouteImport } from './routes/_authenticated/dashboard.perfil'
 import { Route as AuthenticatedDashboardPagamentosRouteImport } from './routes/_authenticated/dashboard.pagamentos'
+import { Route as AuthenticatedDashboardMasterRouteImport } from './routes/_authenticated/dashboard.master'
 import { Route as AuthenticatedDashboardFormularioRouteImport } from './routes/_authenticated/dashboard.formulario'
 import { Route as AuthenticatedDashboardDonoRouteImport } from './routes/_authenticated/dashboard.dono'
 import { Route as AuthenticatedDashboardChatRouteImport } from './routes/_authenticated/dashboard.chat'
@@ -70,6 +71,12 @@ const AuthenticatedDashboardPagamentosRoute =
   AuthenticatedDashboardPagamentosRouteImport.update({
     id: '/pagamentos',
     path: '/pagamentos',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMasterRoute =
+  AuthenticatedDashboardMasterRouteImport.update({
+    id: '/master',
+    path: '/master',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardFormularioRoute =
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/chat': typeof AuthenticatedDashboardChatRoute
   '/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
   '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/dashboard/master': typeof AuthenticatedDashboardMasterRoute
   '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/dashboard/avisos': typeof AuthenticatedDashboardAvisosRoute
   '/dashboard/chat': typeof AuthenticatedDashboardChatRoute
   '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/dashboard/master': typeof AuthenticatedDashboardMasterRoute
   '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/chat': typeof AuthenticatedDashboardChatRoute
   '/_authenticated/dashboard/dono': typeof AuthenticatedDashboardDonoRouteWithChildren
   '/_authenticated/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
+  '/_authenticated/dashboard/master': typeof AuthenticatedDashboardMasterRoute
   '/_authenticated/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/_authenticated/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/dashboard/chat'
     | '/dashboard/dono'
     | '/dashboard/formulario'
+    | '/dashboard/master'
     | '/dashboard/pagamentos'
     | '/dashboard/perfil'
     | '/dashboard/'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/dashboard/avisos'
     | '/dashboard/chat'
     | '/dashboard/formulario'
+    | '/dashboard/master'
     | '/dashboard/pagamentos'
     | '/dashboard/perfil'
     | '/dashboard'
@@ -319,6 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/chat'
     | '/_authenticated/dashboard/dono'
     | '/_authenticated/dashboard/formulario'
+    | '/_authenticated/dashboard/master'
     | '/_authenticated/dashboard/pagamentos'
     | '/_authenticated/dashboard/perfil'
     | '/_authenticated/dashboard/'
@@ -392,6 +405,13 @@ declare module '@tanstack/react-router' {
       path: '/pagamentos'
       fullPath: '/dashboard/pagamentos'
       preLoaderRoute: typeof AuthenticatedDashboardPagamentosRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/master': {
+      id: '/_authenticated/dashboard/master'
+      path: '/master'
+      fullPath: '/dashboard/master'
+      preLoaderRoute: typeof AuthenticatedDashboardMasterRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/formulario': {
@@ -591,6 +611,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardChatRoute: typeof AuthenticatedDashboardChatRoute
   AuthenticatedDashboardDonoRoute: typeof AuthenticatedDashboardDonoRouteWithChildren
   AuthenticatedDashboardFormularioRoute: typeof AuthenticatedDashboardFormularioRoute
+  AuthenticatedDashboardMasterRoute: typeof AuthenticatedDashboardMasterRoute
   AuthenticatedDashboardPagamentosRoute: typeof AuthenticatedDashboardPagamentosRoute
   AuthenticatedDashboardPerfilRoute: typeof AuthenticatedDashboardPerfilRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -606,6 +627,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardDonoRouteWithChildren,
     AuthenticatedDashboardFormularioRoute:
       AuthenticatedDashboardFormularioRoute,
+    AuthenticatedDashboardMasterRoute: AuthenticatedDashboardMasterRoute,
     AuthenticatedDashboardPagamentosRoute:
       AuthenticatedDashboardPagamentosRoute,
     AuthenticatedDashboardPerfilRoute: AuthenticatedDashboardPerfilRoute,

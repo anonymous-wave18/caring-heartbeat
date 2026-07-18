@@ -129,7 +129,7 @@ function ChatPage() {
             <Menu className="size-4" />
           </button>
           <span className="text-sm font-medium truncate flex-1">
-            {selected ? (threadsQ.data?.find((t) => t.id === selected)?.title ?? "Conversa") : "Conversas"}
+            {selected ? (threadsQ.data?.find((t) => t.id === selected)?.title === 'Suporte' && !isStaff ? 'Suporte' : (threadsQ.data?.find((t) => t.id === selected)?.title ?? "Conversa")) : "Conversas"}
           </span>
           {selected && (
             <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSelected(null)}>
@@ -226,7 +226,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                 }`}>
                   {!isMe && (
                     <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                      <span className="text-foreground/80">{displayName(p)}</span>
+                      <span className="text-foreground/80">{p?.is_staff ? (p.first_name || "Admin") : displayName(p)}</span>
                       {p?.is_staff && (
                         <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                           <Shield className="size-2.5" /> ADM

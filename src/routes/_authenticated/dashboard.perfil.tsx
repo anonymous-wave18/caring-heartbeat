@@ -46,8 +46,8 @@ function PerfilPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-medium tracking-tight">Meu perfil</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Atualize suas informações pessoais e credenciais.</p>
+        <h1 className="text-3xl font-medium tracking-tight">{isViewingSelf ? "Meu perfil" : `Perfil de ${profile.first_name}`}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{isViewingSelf ? "Atualize suas informações pessoais e credenciais." : "Veja informações sobre este membro."}</p>
       </div>
 
       <AvatarSection profile={profile} isOwner={isViewingSelf} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", viewId] })} />

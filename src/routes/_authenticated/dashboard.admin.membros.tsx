@@ -127,7 +127,7 @@ function AdminMembros() {
                           </div>
                         </td>
                         <td className="px-4 py-2.5 text-right">
-                          <Link to="/dashboard/chat" className="inline-flex items-center gap-1 text-primary hover:underline">
+                          <Link to="/dashboard/chat" search={{ thread_id: `dm:${m.id}` }} className="inline-flex items-center gap-1 text-primary hover:underline">
                             <MessageSquare className="size-3.5" /> chat
                           </Link>
                         </td>

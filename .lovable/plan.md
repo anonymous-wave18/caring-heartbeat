@@ -1,68 +1,54 @@
-## Fase 1 — Restaurar o projeto do zip (agora)
+# Plano — Funcionalidade Completa Malta Manager
 
-O zip `malta_2.0.zip` contém o projeto completo com 13 migrations, ~30 rotas, integrações Supabase e assets.
+## Objetivo
+Eliminar todos os placeholders "em breve" / "em desenvolvimento" / "simulado" e conectar cada função ao Supabase real. Entregar um SQL único para executar no seu projeto.
 
-Passos:
-1. Copiar todo o conteúdo de `/tmp/malta` para o projeto, **exceto**:
-   - `.env` (mantém o `.env` novo da Cloud atual)
-   - `src/integrations/supabase/{client.ts, client.server.ts, auth-attacher.ts, auth-middleware.ts, types.ts}` (auto-gerados para o novo projeto Cloud)
-   - `supabase/config.toml` (auto-gerado)
-   - `.lovable/`, `node_modules/`, `bun.lock`
-2. Aplicar as 13 migrations combinadas na nova Cloud (cria tabelas: profiles, user_roles, formularios, membros, pagamentos, chat_messages, avisos, documentos, auditoria, site_settings, etc — vou consolidar num único migration file após ler todas).
-3. Reinstalar dependências e reiniciar dev server.
-4. Validar que o site carrega em `/` e `/auth`.
+## 1. SQL para executar (novas tabelas e ajustes)
 
-**Importante:** o Supabase novo está vazio, então dados antigos (usuários, formulários, pagamentos) não voltam — apenas o schema. Você vai precisar recriar as contas.
+Vou entregar um único bloco SQL com:
 
-## Fase 2 — Correções críticas (próxima mensagem, após restore validado)
+- `organizations` (multi-tenant): id, name, slug, plan, owner_email, mrr_cents, status, created_at + GRANTs + RLS (apenas master lê/escreve).
+- `chat_messages`: adicionar colunas `reply_to_id uuid`, `attachment_url text`, `attachment_kind text` (audio/image/gif).
+- `user_follows` (para botão Seguir do perfil): follower_id, following_id + RLS.
+- `feedback` (envio de feedback do sistema pelo chat): user_id, message, category, created_at + RLS.
+- `master_users` view (agrega profiles + roles + org).
+- Bucket storage `chat-audio` para gravações.
+- Seed inicial da organização "Malta" com você (`cry498434@gmail.com`) como owner_email.
 
-Você pediu muita coisa. Vou atacar por ordem de impacto/dependência:
+## 2. Correções de código
 
-**Bloco A — Formulários e cargos (bug reportado)**
-- Corrigir trigger/RLS que atribui cargo "rec" (aguardando avaliação) quando membro envia formulário
-- Fazer o formulário enviado aparecer em `/dashboard/admin/formularios`
-- Adicionar upload de comprovante de residência no formulário
-- No Discord webhook: usar `@discord_username` + ID que o membro colocou no signup
+### Chat (`dashboard.chat.tsx`)
+- Implementar **gravação de áudio real** (MediaRecorder API) → upload no bucket `chat-audio` → mensagem com `attachment_kind='audio'` + player.
+- Implementar **responder mensagem** (reply_to_id), com preview da msg citada.
+- Implementar **swipe-to-reply** no mobile (touch events).
+- Botão GIF: abrir picker Tenor (ou input de URL simples se sem API).
+- Feedback: modal real que insere em `feedback` table.
 
-**Bloco B — Sistema de pagamento semanal por admin**
-- Coluna `admin_id` (aprovador) em `membros`
-- Cálculo "dias até próximo pagamento" visível ao membro
-- Quando vencer, mostrar PIX **do admin que aprovou** o membro
-- Admin: aba "Enviar PIX" (comprovante) → Dono aprova/rejeita
-- Dono: PIX padrão dele + visão consolidada de dívidas por admin
-- Dashboard admin: recrutas + total devido só dos seus
+### Master (`dashboard.master.*`)
+- `organizations.tsx`: CRUD real de organizações (listar, criar, editar plano/status, deletar).
+- `users.tsx`: listar todos os profiles globais + roles, com filtros e ações (promover, banir).
+- `security.tsx`: exibir últimos logs de audit_log com filtros, sessões ativas, tentativas de login.
+- `settings.tsx`: config global (nome da plataforma, logo, taxa de comissão SaaS).
+- `index.tsx`: remover toast "em breve", botão "Configurar" navega para `/dashboard/master/organizations`.
 
-**Bloco C — Chat/Suporte (WhatsApp-like)**
-- Mostrar avatar + nome do remetente em cada msg
-- Clicar no avatar → perfil (cargo, discord, tempo na org, botão seguir)
-- Responder mensagem (quote), apagar mensagem
-- Indicador "digitando" e "lido"
-- Chat suporte: badge "Admin" ao lado do nome
-- Layout responsivo mobile
+### Perfil (`dashboard.perfil.tsx`)
+- Remover `mockAchievements` → tabela `achievements` real (query por user_id).
+- Botão Seguir conecta em `user_follows`.
 
-**Bloco D — Melhorias empresariais**
-- Máscaras CPF/telefone em tempo real no formulário
-- Auditoria completa (quem aprovou, quem trocou cargo, quem viu documento sensível)
-- Dashboard de métricas (crescimento, pagamentos semanais, formulários pendentes)
-- Exportação CSV/Excel (membros, pagamentos, formulários)
-- Backup/restore para Dono
-- Sistema de badges/conquistas
-- PWA (instalável no celular)
+### Dono (`dashboard.dono.*`)
+- Garantir que Repasses, Auditoria, Database e Permissões estão totalmente funcionais (validar cada um).
 
-**Adiado (precisa conversa antes):**
-- Multi-organização white-label (grande refactor, dias de trabalho)
-- Configurações avançadas (temas customizados, domínios, CRM)
+## 3. Detalhes técnicos
 
-## Detalhes técnicos
+- Áudio: MediaRecorder → Blob webm → `supabase.storage.from('chat-audio').upload()` → salvar path em `attachment_url`.
+- Reply: coluna `reply_to_id` + JOIN client-side com msgs já carregadas.
+- Swipe: `onTouchStart/Move/End` com threshold de 60px, deslocamento visual via `transform`.
+- Master RLS: `has_role(auth.uid(), 'owner')` AND email in ('cry498434@gmail.com', 'candinofpx@gmail.com').
 
-- Stack mantido: TanStack Start + Supabase (Lovable Cloud), sem trocar nada.
-- Migrations consolidadas em um único arquivo para minimizar approvals.
-- Chat responsivo com breakpoints; sidebar vira drawer no mobile.
-- PIX por admin: nova tabela `admin_pix_keys` + `pix_repasses` com status `pendente/aprovado/rejeitado`.
-- Auditoria: tabela `audit_log` + trigger genérico + página `/dashboard/dono/auditoria` já existe, preencher.
-- PWA: manifest.json + service worker excluindo `/api/*` e `/~oauth/*`.
+## 4. Entrega
+1. SQL único (você executa no SQL Editor do Supabase).
+2. Todas as edições de código.
+3. Instruções curtas de teste.
 
-## O que preciso de você depois da Fase 1
-
-- Um "usuário teste" — você prefere que eu crie via signup normal (você me dá um email/senha descartável) ou via seed direto? Você mencionou "dps eu apago".
-- Confirmar Bloco A → D nessa ordem, ou reordenar.
+## Observação
+Não vou testar via Playwright autenticado (sua Supabase é externa, não gerenciada pela Lovable) — validarei via typecheck/build e explicando o comportamento esperado.

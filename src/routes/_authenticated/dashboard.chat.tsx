@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus, Square, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
@@ -135,7 +135,7 @@ function ChatPage() {
         <div className="flex items-center justify-between border-b border-border px-4 py-3 text-sm font-medium">
           Conversas
           <div className="flex items-center gap-1">
-            <button title="Enviar Feedback" className="rounded-md p-1 hover:bg-primary/10 text-primary" onClick={() => toast.info("Feedback: Envie sua mensagem no chat de Suporte.")}><Shield className="size-4" /></button>
+            <FeedbackButton />
             <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
           </div>
         </div>
@@ -383,4 +383,47 @@ function AvatarImage({ path, fallback }: { path: string | null | undefined; fall
   if (url) return <img src={url} alt="" className="size-full object-cover" />;
   if (path && (path.startsWith("http") || path.startsWith("blob:"))) return <img src={path} alt="" className="size-full object-cover" />;
   return <>{fallback}</>;
+}
+
+function FeedbackButton() {
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [cat, setCat] = useState("geral");
+  const [sending, setSending] = useState(false);
+  async function send() {
+    if (!msg.trim()) return;
+    setSending(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await (supabase.from("feedback" as any) as any).insert({ user_id: u.user?.id, category: cat, message: msg.trim() });
+      if (error) throw error;
+      toast.success("Feedback enviado. Obrigado!");
+      setMsg(""); setOpen(false);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setSending(false); }
+  }
+  return (
+    <>
+      <button title="Enviar Feedback" className="rounded-md p-1 hover:bg-primary/10 text-primary" onClick={() => setOpen(true)}>
+        <MessageSquarePlus className="size-4" />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-md rounded-xl bg-surface p-5 ring-1 ring-border" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-medium mb-3">Enviar Feedback</h3>
+            <select value={cat} onChange={(e) => setCat(e.target.value)} className="input w-full mb-2">
+              <option value="geral">Geral</option><option value="bug">Bug</option><option value="ideia">Ideia</option><option value="reclamacao">Reclamação</option>
+            </select>
+            <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={4} placeholder="Descreva…" className="input w-full mb-3" />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setOpen(false)} className="px-3 py-1.5 text-sm rounded-md hover:bg-surface-muted">Cancelar</button>
+              <button onClick={send} disabled={sending || !msg.trim()} className="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground disabled:opacity-50">
+                {sending ? "Enviando…" : "Enviar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

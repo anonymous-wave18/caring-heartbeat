@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus } from "lucide-react";
+import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus, Square, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
@@ -135,7 +135,7 @@ function ChatPage() {
         <div className="flex items-center justify-between border-b border-border px-4 py-3 text-sm font-medium">
           Conversas
           <div className="flex items-center gap-1">
-            <button title="Enviar Feedback" className="rounded-md p-1 hover:bg-primary/10 text-primary" onClick={() => toast.info("Feedback: Envie sua mensagem no chat de Suporte.")}><Shield className="size-4" /></button>
+            <FeedbackButton />
             <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
           </div>
         </div>

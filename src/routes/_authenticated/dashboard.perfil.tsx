@@ -318,33 +318,25 @@ function PasswordForm() {
 }
 
 function AchievementsSection({ userId }: { userId: string }) {
-  const achQuery = useQuery({
-    queryKey: ["user-achievements", userId],
+  const allQ = useQuery({
+    queryKey: ["achievements-all"],
     queryFn: async () => {
-      // Use any to bypass TS until schema is synced
-      const { data, error } = await (supabase.from("user_achievements" as any) as any)
-        .select("*, achievements(*)")
-        .eq("user_id", userId);
-      
-      if (error) {
-        // If table doesn't exist, return empty
-        return [];
-      }
+      const { data, error } = await (supabase.from("achievements" as any) as any).select("*");
+      if (error) return [];
       return data ?? [];
     },
-    retry: false,
+  });
+  const userQ = useQuery({
+    queryKey: ["user-achievements", userId],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("user_achievements" as any) as any).select("achievement_id").eq("user_id", userId);
+      if (error) return [];
+      return data ?? [];
+    },
   });
 
-  const mockAchievements = [
-    { name: "Pagador em Dia", desc: "Manteve as faturas pagas no prazo", icon: Zap, color: "text-amber-500", unlocked: true },
-    { name: "Veterano", desc: "Mais de 100 dias na organização", icon: Star, color: "text-blue-500", unlocked: true },
-    { name: "Administrador", desc: "Parte da equipe de gestão", icon: ShieldCheck, color: "text-primary", unlocked: true },
-    { name: "Malta 1 Ano", desc: "Completou um ano de fidelidade", icon: Trophy, color: "text-yellow-500", unlocked: false },
-  ];
-
-  const badges = achQuery.data && achQuery.data.length > 0 
-    ? achQuery.data.map((ua: any) => ({ ...ua.achievements, unlocked: true }))
-    : mockAchievements;
+  const unlockedIds = new Set((userQ.data ?? []).map((u: any) => u.achievement_id));
+  const badges = (allQ.data ?? []).map((a: any) => ({ name: a.name, desc: a.description, unlocked: unlockedIds.has(a.id) }));
 
   return (
     <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
@@ -352,11 +344,14 @@ function AchievementsSection({ userId }: { userId: string }) {
         <Trophy className="size-4 text-primary" />
         <h2 className="font-medium">Minhas Conquistas</h2>
       </div>
+      {badges.length === 0 ? (
+        <div className="text-sm text-muted-foreground text-center py-6">Nenhuma conquista cadastrada ainda.</div>
+      ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {badges.map((b: any, i: number) => (
           <div key={i} className={`flex flex-col items-center p-4 rounded-xl ring-1 transition-all ${b.unlocked ? "bg-primary/5 ring-primary/20" : "bg-surface-muted/30 ring-border opacity-50 grayscale"}`}>
-            <div className={`p-3 rounded-full bg-background mb-3 ring-1 ring-border ${b.color || "text-primary"}`}>
-              {typeof b.icon === 'string' ? <Star className="size-6" /> : <b.icon className="size-6" />}
+            <div className="p-3 rounded-full bg-background mb-3 ring-1 ring-border text-primary">
+              <Trophy className="size-6" />
             </div>
             <div className="text-sm font-semibold text-center">{b.name}</div>
             <div className="text-[10px] text-muted-foreground text-center mt-1">{b.desc}</div>
@@ -366,6 +361,7 @@ function AchievementsSection({ userId }: { userId: string }) {
           </div>
         ))}
       </div>
+      )}
     </section>
   );
 }
@@ -401,10 +397,27 @@ function Field({
 }
 
 function PublicProfileView({ profile, currentUserId }: { profile: Profile; currentUserId: string }) {
+  const qc = useQueryClient();
+  const followingQ = useQuery({
+    queryKey: ["is-following", currentUserId, profile.id],
+    queryFn: async () => {
+      const { data } = await (supabase.from("user_follows" as any) as any)
+        .select("follower_id").eq("follower_id", currentUserId).eq("following_id", profile.id).maybeSingle();
+      return !!data;
+    },
+  });
   const followMut = useMutation({
     mutationFn: async () => {
-      toast.success(`Seguindo ${profile.first_name}!`);
-    }
+      if (followingQ.data) {
+        const { error } = await (supabase.from("user_follows" as any) as any).delete().eq("follower_id", currentUserId).eq("following_id", profile.id);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from("user_follows" as any) as any).insert({ follower_id: currentUserId, following_id: profile.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["is-following", currentUserId, profile.id] }); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const startDMMut = useMutation({
@@ -416,7 +429,9 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
   return (
     <div className="space-y-6">
       <div className="flex gap-3">
-        <button onClick={() => followMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Seguir</button>
+        <button onClick={() => followMut.mutate()} disabled={followMut.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
+          {followingQ.data ? "Seguindo" : "Seguir"}
+        </button>
         <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border">Enviar Mensagem (DM)</button>
       </div>
       <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">

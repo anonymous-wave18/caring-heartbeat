@@ -216,10 +216,20 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<any>(null);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [recording, setRecording] = useState(false);
+  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordStartRef = useRef<number>(0);
 
   const senderIds = (msgsQ.data ?? []).map((m) => m.sender_id);
   const uniqueSenderIds = Array.from(new Set(senderIds));
   const profsQ = useProfilesBasic(uniqueSenderIds);
+  const msgsById = useMemo(() => {
+    const m = new Map<string, any>();
+    (msgsQ.data ?? []).forEach((x: any) => m.set(x.id, x));
+    return m;
+  }, [msgsQ.data]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -227,23 +237,17 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
 
   useEffect(() => {
     const ch = supabase.channel(`msg-${threadId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages", filter: `thread_id=eq.${threadId}` },
         () => qc.invalidateQueries({ queryKey: ["messages", threadId] }))
       .on("presence", { event: "sync" }, () => {
         const state = ch.presenceState();
         const typing = new Set<string>();
         Object.values(state).forEach((presences: any) => {
-          presences.forEach((p: any) => {
-            if (p.isTyping && p.userId !== userId) typing.add(p.userId);
-          });
+          presences.forEach((p: any) => { if (p.isTyping && p.userId !== userId) typing.add(p.userId); });
         });
         setTypingUsers(typing);
       })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await ch.track({ userId, isTyping });
-        }
-      });
+      .subscribe(async (status) => { if (status === "SUBSCRIBED") await ch.track({ userId, isTyping }); });
     return () => { supabase.removeChannel(ch); };
   }, [threadId, qc, userId, isTyping]);
 
@@ -254,126 +258,182 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   }
 
   const sendMut = useMutation({
-    mutationFn: async () => {
-      const body = text.trim(); if (!body) return;
-      const { error } = await supabase.from("chat_messages").insert({ thread_id: threadId, sender_id: userId, body });
+    mutationFn: async (payload?: { body?: string; attachment_url?: string; attachment_type?: string; duration_ms?: number }) => {
+      const body = (payload?.body ?? text).trim();
+      if (!body && !payload?.attachment_url) return;
+      const insert: any = {
+        thread_id: threadId,
+        sender_id: userId,
+        body: body || null,
+        reply_to_id: replyingTo?.id ?? null,
+      };
+      if (payload?.attachment_url) {
+        insert.attachment_url = payload.attachment_url;
+        insert.attachment_type = payload.attachment_type;
+        insert.duration_ms = payload.duration_ms ?? null;
+      }
+      const { error } = await supabase.from("chat_messages").insert(insert);
       if (error) throw error;
-      setText("");
-    },
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("chat_messages").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["messages", threadId] });
-      toast.success("Mensagem apagada");
+      setText(""); setReplyingTo(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("chat_messages").update({ deleted_at: new Date().toISOString(), body: null } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["messages", threadId] }); toast.success("Mensagem apagada"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recordStartRef.current = Date.now();
+      mr.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        const dur = Date.now() - recordStartRef.current;
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const path = `${userId}/${threadId}/${Date.now()}.webm`;
+        const up = await supabase.storage.from("chat-attachments").upload(path, blob, { contentType: "audio/webm" });
+        if (up.error) { toast.error(up.error.message); return; }
+        const { data: pub } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+        await sendMut.mutateAsync({ attachment_url: pub.publicUrl, attachment_type: "audio", duration_ms: dur });
+      };
+      mediaRecRef.current = mr; mr.start(); setRecording(true);
+    } catch (e: any) { toast.error("Permissão de microfone negada"); }
+  }
+  function stopRecording() {
+    if (mediaRecRef.current && recording) { mediaRecRef.current.stop(); setRecording(false); }
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
-        {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m) => {
+        {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m: any) => {
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);
+          const replied = m.reply_to_id ? msgsById.get(m.reply_to_id) : null;
+          const repliedP = replied ? profsQ.data?.get(replied.sender_id) : null;
           return (
-            <div key={m.id} className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
-              {!isMe && (
-                <button 
-                  onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}
-                  className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all focus:ring-2"
-                >
-                  <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
-                </button>
-              )}
-              <div className="relative group/msg max-w-[85%] sm:max-w-[75%]">
-                <div className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                  isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"
-                }`}>
-                  {!isMe && (
-                    <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                      <span className="text-foreground/80 hover:text-primary cursor-pointer transition-colors" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
-                      {p?.is_staff && (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
-                          <Shield className="size-2.5" /> ADM
-                        </span>
+            <SwipeableRow key={m.id} onSwipeReply={() => setReplyingTo(m)}>
+              <div className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
+                {!isMe && (
+                  <button onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}
+                    className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all">
+                    <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
+                  </button>
+                )}
+                <div className="relative group/msg max-w-[85%] sm:max-w-[75%]">
+                  <div className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"}`}>
+                    {!isMe && (
+                      <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
+                        <span className="text-foreground/80 hover:text-primary cursor-pointer" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
+                        {p?.is_staff && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
+                            <Shield className="size-2.5" /> ADM
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {replied && (
+                      <div className={`mb-1 rounded-md border-l-2 px-2 py-1 text-[11px] ${isMe ? "border-primary-foreground/40 bg-primary-foreground/10" : "border-primary/40 bg-background/50"}`}>
+                        <div className="font-medium opacity-80">{displayName(repliedP)}</div>
+                        <div className="truncate opacity-70">{replied.body || (replied.attachment_type === "audio" ? "🎤 Áudio" : "Anexo")}</div>
+                      </div>
+                    )}
+                    {m.deleted_at ? (
+                      <div className="italic opacity-60">Mensagem apagada</div>
+                    ) : m.attachment_type === "audio" ? (
+                      <audio controls src={m.attachment_url} className="max-w-[240px]" />
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                    )}
+                    <div className={`mt-0.5 flex items-center justify-between gap-2 text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                      <span>{new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  </div>
+                  {!m.deleted_at && (
+                    <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1`}>
+                      <button className="p-1.5 hover:bg-surface-muted rounded-full text-muted-foreground" title="Responder" onClick={() => setReplyingTo(m)}><Reply className="size-3.5" /></button>
+                      {isMe && (
+                        <button className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full text-muted-foreground" title="Apagar" onClick={() => { if (confirm("Deseja apagar esta mensagem?")) deleteMut.mutate(m.id); }}>
+                          <Trash2 className="size-3.5" />
+                        </button>
                       )}
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap break-words">{m.body}</div>
-                  <div className={`mt-0.5 flex items-center justify-between gap-2 text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    <span>{new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                    {isMe && <span className="opacity-0 group-hover/msg:opacity-100 transition-opacity">Entregue</span>}
-                  </div>
                 </div>
-                
-                {/* Ações de mensagem */}
-                <div className={`absolute top-0 ${isMe ? "-left-12" : "-right-12"} hidden group-hover/msg:flex items-center gap-1 p-1 transition-all`}>
-                   <button className="p-1.5 hover:bg-surface-muted rounded-full text-muted-foreground transition-colors" title="Responder" onClick={() => toast.info("Funcionalidade de resposta em breve")}><Reply className="size-3.5" /></button>
-                   {isMe && (
-                     <button 
-                       className="p-1.5 hover:bg-destructive/10 hover:text-destructive rounded-full text-muted-foreground transition-colors" 
-                       title="Apagar" 
-                       onClick={() => {
-                         if (confirm("Deseja apagar esta mensagem?")) deleteMut.mutate(m.id);
-                       }}
-                     >
-                       <Trash2 className="size-3.5" />
-                     </button>
-                   )}
-                </div>
+                {isMe && (
+                  <button onClick={() => window.location.href = `/dashboard/perfil`}
+                    className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary">
+                    <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
+                  </button>
+                )}
               </div>
-              {isMe && (
-                <button 
-                  onClick={() => window.location.href = `/dashboard/perfil`}
-                  className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary hover:ring-primary transition-all focus:ring-2"
-                >
-                  <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
-                </button>
-              )}
-            </div>
+            </SwipeableRow>
           );
         })}
         {typingUsers.size > 0 && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground animate-pulse">
-            <div className="flex gap-0.5">
-              <span className="size-1 rounded-full bg-muted-foreground/50" />
-              <span className="size-1 rounded-full bg-muted-foreground/50" />
-              <span className="size-1 rounded-full bg-muted-foreground/50" />
-            </div>
             {Array.from(typingUsers).map(id => displayName(profsQ.data?.get(id))).join(", ")} está digitando...
           </div>
         )}
         {msgsQ.data && msgsQ.data.length === 0 && <div className="text-center text-sm text-muted-foreground">Sem mensagens ainda.</div>}
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(); }}
-        className="flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
-        <button type="button" className="p-2 text-muted-foreground hover:text-primary rounded-full hover:bg-primary/5 transition-colors" title="Gravar áudio" onMouseDown={() => toast.info("Segure para gravar (simulado)")}>
-          <Mic className="size-5" />
-        </button>
-        <div className="relative flex-1 group/input">
-          <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input pr-10" />
-          <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary/50 hover:text-primary">GIF</button>
-          
-          {/* Swipe UI simulator placeholder */}
-          <div className="absolute -top-12 left-0 hidden group-focus-within/input:flex flex-col gap-1 text-[10px] text-muted-foreground animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-1 font-medium text-primary">
-              <Mic className="size-3" /> Segure para gravar áudio (em breve)
-            </div>
-            <div className="flex items-center gap-1">
-              <Reply className="size-3" /> Deslize para responder (em breve)
-            </div>
+      {replyingTo && (
+        <div className="flex items-center gap-2 border-t border-border bg-primary/5 px-3 py-2 text-xs">
+          <Reply className="size-3.5 text-primary" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-primary">Respondendo a {displayName(profsQ.data?.get(replyingTo.sender_id))}</div>
+            <div className="truncate text-muted-foreground">{replyingTo.body || "Anexo"}</div>
           </div>
+          <button onClick={() => setReplyingTo(null)} className="p-1 rounded hover:bg-surface-muted"><X className="size-3.5" /></button>
         </div>
+      )}
+      <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(undefined); }}
+        className="flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
+        <button type="button"
+          className={`p-2 rounded-full transition-colors ${recording ? "bg-destructive text-white animate-pulse" : "text-muted-foreground hover:text-primary hover:bg-primary/5"}`}
+          title={recording ? "Parar" : "Gravar áudio"}
+          onClick={recording ? stopRecording : startRecording}>
+          {recording ? <Square className="size-5" /> : <Mic className="size-5" />}
+        </button>
+        <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input flex-1" />
         <button type="submit" disabled={!text.trim() || sendMut.isPending}
-          className="inline-flex items-center gap-1 rounded-full bg-primary p-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-primary/20">
+          className="inline-flex items-center rounded-full bg-primary p-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20">
           <Send className="size-5" />
         </button>
       </form>
+    </div>
+  );
+}
+
+function SwipeableRow({ children, onSwipeReply }: { children: React.ReactNode; onSwipeReply: () => void }) {
+  const [dx, setDx] = useState(0);
+  const startX = useRef<number | null>(null);
+  return (
+    <div
+      onTouchStart={(e) => { startX.current = e.touches[0].clientX; }}
+      onTouchMove={(e) => {
+        if (startX.current == null) return;
+        const d = e.touches[0].clientX - startX.current;
+        if (d > 0 && d < 100) setDx(d);
+      }}
+      onTouchEnd={() => {
+        if (dx > 60) onSwipeReply();
+        setDx(0); startX.current = null;
+      }}
+      style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? "transform 0.2s" : "none" }}
+      className="relative"
+    >
+      {dx > 20 && <Reply className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-primary" />}
+      {children}
     </div>
   );
 }

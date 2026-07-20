@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus, Square, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -414,7 +414,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   );
 }
 
-function SwipeableRow({ children, onSwipeReply }: { children: React.ReactNode; onSwipeReply: () => void }) {
+function SwipeableRow({ children, onSwipeReply }: { children: ReactNode; onSwipeReply: () => void }) {
   const [dx, setDx] = useState(0);
   const startX = useRef<number | null>(null);
   return (

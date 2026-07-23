@@ -29,7 +29,7 @@ CREATE OR REPLACE VIEW public.organizations_billing_view AS
 WITH member_counts AS (
   SELECT o.id AS org_id,
          (SELECT COUNT(*) FROM public.profiles p WHERE p.status = 'approved') AS active_members,
-         (SELECT COALESCE(SUM(amount_cents),0)
+         (SELECT COALESCE(SUM(ROUND(amount * 100)::bigint),0)
             FROM public.payments
            WHERE status = 'approved'
              AND created_at >= now() - interval '7 days') AS last_week_revenue_cents

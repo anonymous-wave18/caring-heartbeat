@@ -15,14 +15,14 @@ function MasterOverview() {
       const { count: users } = await supabase.from("profiles").select("*", { count: "exact", head: true });
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: rev } = await supabase.from("payments")
-        .select("amount_cents,created_at").eq("status", "approved")
+        .select("amount,created_at").eq("status", "approved")
         .gte("created_at", sevenDaysAgo);
-      const weeklyRevenueCents = (rev ?? []).reduce((acc: number, r: any) => acc + Number(r.amount_cents ?? 0), 0);
+      const weeklyRevenueCents = (rev ?? []).reduce((acc: number, r: any) => acc + Math.round(Number(r.amount ?? 0) * 100), 0);
 
       let estimatedRevenueCents = 0;
       let activeSubs = 0;
       for (const o of (orgs ?? []) as any[]) {
-        if (o.status && o.status !== "active") continue;
+        if (o.status && !["active", "approved"].includes(o.status)) continue;
         activeSubs++;
         if (o.billing_model === "monthly_fixed") {
           estimatedRevenueCents += Number(o.monthly_fee_cents ?? 0);

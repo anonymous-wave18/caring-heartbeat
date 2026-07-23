@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Check, X, FileText, Loader2, Download } from "lucide-react";
+import { Check, X, FileText, Loader2, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -224,6 +224,16 @@ function FormDetail({ form, onClose, onApprove, onReject }: {
     if (data?.signedUrl) {
       const a = document.createElement("a"); a.href = data.signedUrl; a.download = name; a.target = "_blank"; a.click();
     }
+  }
+
+  const [preview, setPreview] = useState<{ url: string; name: string; type: string } | null>(null);
+  async function openPreview(path: string, name: string) {
+    const { data } = await supabase.storage.from("documents").createSignedUrl(path, 300);
+    if (!data?.signedUrl) return;
+    const ext = name.split(".").pop()?.toLowerCase() ?? "";
+    const type = ["png","jpg","jpeg","gif","webp","bmp","svg"].includes(ext) ? "image"
+      : ext === "pdf" ? "pdf" : "other";
+    setPreview({ url: data.signedUrl, name, type });
   }
 
   return (

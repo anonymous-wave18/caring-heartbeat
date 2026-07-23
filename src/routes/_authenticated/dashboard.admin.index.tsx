@@ -156,13 +156,13 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-lg bg-surface p-1 ring-1 ring-border">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="-mx-1 flex gap-1 overflow-x-auto rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
           {(["pending", "approved", "rejected", "all"] as StatusFilter[]).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 filter === f ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -173,7 +173,7 @@ function AdminPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => {
               const csvRows = filtered.map(m => {
@@ -198,11 +198,11 @@ function AdminPage() {
               a.setAttribute('download', `membros_malta_${new Date().toISOString().split('T')[0]}.csv`);
               document.body.appendChild(a); a.click(); document.body.removeChild(a);
             }}
-            className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-3 py-2 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-surface-muted px-3 py-2 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
           >
             <Download className="size-3.5" /> Exportar CSV
           </button>
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full min-w-0 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}

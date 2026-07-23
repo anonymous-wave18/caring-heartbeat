@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/formulario
 function AdminFormularios() {
   const qc = useQueryClient();
   const meQ = useQuery({ queryKey: ["auth-user"], queryFn: async () => (await supabase.auth.getUser()).data.user! });
-  const [filter, setFilter] = useState<"submitted" | "approved" | "rejected" | "all">("submitted");
+  const [filter, setFilter] = useState<"submitted" | "approved" | "rejected" | "all">("all");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const formsQ = useQuery({
@@ -29,6 +29,17 @@ function AdminFormularios() {
       const byId = new Map((profs ?? []).map((p: any) => [p.id, p]));
       return rows.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
+  });
+
+  const countsQ = useQuery({
+    queryKey: ["admin-forms-counts"],
+    queryFn: async () => {
+      const { data } = await supabase.from("recruitment_forms").select("status");
+      const c = { submitted: 0, approved: 0, rejected: 0, all: 0, not_submitted: 0 } as Record<string, number>;
+      (data ?? []).forEach((r: any) => { c[r.status] = (c[r.status] ?? 0) + 1; c.all += 1; });
+      return c;
+    },
+    refetchInterval: 15000,
   });
 
   const reviewMut = useMutation({
@@ -136,6 +147,11 @@ function AdminFormularios() {
               filter === f ? "bg-primary text-primary-foreground ring-primary" : "bg-surface ring-border hover:bg-surface-muted"
             }`}>
             {f === "submitted" ? "Aguardando" : f === "approved" ? "Aprovados" : f === "rejected" ? "Recusados" : "Todos"}
+            {countsQ.data && (
+              <span className="ml-1.5 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px]">
+                {countsQ.data[f] ?? 0}
+              </span>
+            )}
           </button>
         ))}
       </div>

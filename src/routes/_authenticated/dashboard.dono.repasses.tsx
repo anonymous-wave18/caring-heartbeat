@@ -4,6 +4,7 @@ import { Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/useSiteSettings";
+import { reviewTransfer } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/dono/repasses")({
   component: RepassesPage,
@@ -30,8 +31,7 @@ function RepassesPage() {
 
   const setStatus = useMutation({
     mutationFn: async (args: { id: string; status: "confirmed" | "rejected" | "none" }) => {
-      const { error } = await supabase.from("payments").update({ transfer_status: args.status }).eq("id", args.id);
-      if (error) throw error;
+      await reviewTransfer({ data: { payment_id: args.id, status: args.status } });
     },
     onSuccess: () => { toast.success("Atualizado."); qc.invalidateQueries({ queryKey: ["repasses"] }); },
     onError: (e: Error) => toast.error(e.message),

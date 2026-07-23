@@ -95,7 +95,20 @@ function ChatPage() {
         q = q.or(`member_id.eq.${userId},kind.eq.general`);
       }
       const { data } = await q.order("kind").order("updated_at", { ascending: false });
-      return data ?? [];
+      const rows = data ?? [];
+      // Para staff: esconde DMs vazias (sem nenhuma mensagem). Isso resolve o problema
+      // de aparecer no sidebar toda pessoa que só abriu o chat, sem ter conversado.
+      // O canal "general" e as DMs do próprio usuário aparecem sempre.
+      if (!isStaff || rows.length === 0) return rows;
+      const directIds = rows.filter((t) => t.kind === "direct").map((t) => t.id);
+      if (directIds.length === 0) return rows;
+      const { data: msgs } = await supabase
+        .from("chat_messages")
+        .select("thread_id")
+        .in("thread_id", directIds)
+        .limit(1000);
+      const withMsgs = new Set((msgs ?? []).map((m: any) => m.thread_id));
+      return rows.filter((t) => t.kind !== "direct" || withMsgs.has(t.id));
     },
   });
 
@@ -109,10 +122,14 @@ function ChatPage() {
     }
   }, [isStaff, threadsQ.data, qc]);
 
-  // Member: ensure their direct thread exists
+  // Member: NÃO cria mais thread vazia automaticamente.
+  // Se o member não tem uma DM ativa, cria só na hora que ele mandar a primeira mensagem
+  // (a query "threads" para member já traz member_id=eq.userId ou general).
   useEffect(() => {
     if (!userId || isStaff) return;
-    if (threadsQ.data && !threadsQ.data.find((t) => t.kind === "direct" && t.member_id === userId)) {
+    if (threadsQ.data && threadsQ.data.length > 0) return;
+    // Se não veio nada (nem general), cria a DM de suporte para o membro.
+    if (threadsQ.data && threadsQ.data.length === 0) {
       supabase.from("chat_threads").insert({ kind: "direct", member_id: userId, title: "Suporte" }).then(() => {
         qc.invalidateQueries({ queryKey: ["threads"] });
       });
@@ -370,8 +387,15 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("chat_messages").update({ deleted_at: new Date().toISOString(), body: null } as any).eq("id", id);
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .update({ deleted_at: new Date().toISOString(), body: null } as any)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Sem permissão para apagar esta mensagem (RLS).");
+      }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["messages", threadId] }); toast.success("Mensagem apagada"); },
     onError: (e: Error) => toast.error(e.message),

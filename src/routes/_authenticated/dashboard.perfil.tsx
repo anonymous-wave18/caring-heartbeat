@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -669,6 +669,7 @@ function Field({
 
 function PublicProfileView({ profile, currentUserId }: { profile: Profile; currentUserId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const followingQ = useQuery({
     queryKey: ["is-following", currentUserId, profile.id],
     queryFn: async () => {
@@ -723,10 +724,30 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Papel do usuário atual e do alvo — pra decidir quando exibir o botão DM.
+  const myRolesQ = useQuery({
+    queryKey: ["my-roles", currentUserId],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", currentUserId);
+      return new Set((data ?? []).map((r: any) => r.role));
+    },
+  });
+  const targetRolesQ = useQuery({
+    queryKey: ["target-roles", profile.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", profile.id);
+      return new Set((data ?? []).map((r: any) => r.role));
+    },
+  });
+  const iAmStaff = !!(myRolesQ.data && (myRolesQ.data.has("owner") || myRolesQ.data.has("admin")));
+  const targetIsStaff = !!(targetRolesQ.data && (targetRolesQ.data.has("owner") || targetRolesQ.data.has("admin")));
+  // Staff-staff DM não existe no modelo atual (RLS só aceita member_id do próprio membro).
+  const canDM = !(iAmStaff && targetIsStaff) && profile.id !== currentUserId;
+
   const startDMMut = useMutation({
     mutationFn: async () => {
-      window.location.href = `/dashboard/chat?thread_id=dm:${profile.id}`;
-    }
+      navigate({ to: "/dashboard/chat", search: { thread_id: `dm:${profile.id}` } });
+    },
   });
 
   const daysInOrg = Math.max(
@@ -756,7 +777,11 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
         <button onClick={() => followMut.mutate()} disabled={followMut.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
           {followingQ.data ? "Seguindo" : "Seguir"}
         </button>
-        <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border">Enviar Mensagem (DM)</button>
+        {canDM && (
+          <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border hover:bg-surface-muted/70 transition-colors">
+            Enviar Mensagem (DM)
+          </button>
+        )}
       </div>
 
       <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">

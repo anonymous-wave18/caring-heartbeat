@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   LogOut, ShieldCheck, LayoutDashboard, Users, UserCircle, Loader2,
-  FileText, CreditCard, MessageSquare, Megaphone, Crown, Bell, Menu, X, Globe,
+  FileText, CreditCard, MessageSquare, Megaphone, Crown, Bell, Menu, X, Globe, Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
@@ -100,6 +100,7 @@ function DashboardLayout() {
     { to: "/dashboard/formulario", label: "Formulário", icon: FileText, exact: false },
     ...(canPay ? [{ to: "/dashboard/pagamentos", label: "Pagamentos", icon: CreditCard, exact: false }] : []),
     { to: "/dashboard/chat", label: "Chat", icon: MessageSquare, exact: false },
+    { to: "/dashboard/social", label: "Rede", icon: Sparkles, exact: false },
     { to: "/dashboard/avisos", label: "Avisos", icon: Megaphone, exact: false },
   ] as const;
   const adminNav = isStaff ? [

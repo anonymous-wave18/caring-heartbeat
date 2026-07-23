@@ -387,8 +387,15 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("chat_messages").update({ deleted_at: new Date().toISOString(), body: null } as any).eq("id", id);
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .update({ deleted_at: new Date().toISOString(), body: null } as any)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Sem permissão para apagar esta mensagem (RLS).");
+      }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["messages", threadId] }); toast.success("Mensagem apagada"); },
     onError: (e: Error) => toast.error(e.message),

@@ -426,8 +426,8 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
+    <div className="flex h-full min-h-0 flex-col">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
         {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m: any) => {
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);

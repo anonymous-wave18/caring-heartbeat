@@ -229,10 +229,10 @@ function ChatPage() {
     : (selectedOtherProfile ? displayName(selectedOtherProfile) : "Conversa");
 
   return (
-    <div className="relative flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] gap-4">
+    <div className="relative flex h-[calc(100dvh-120px)] md:h-[calc(100dvh-160px)] gap-3 sm:gap-4">
       {/* Sidebar */}
       <aside className={`
-        ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 w-72 translate-x-0" : "fixed inset-y-0 left-0 z-40 w-72 -translate-x-full"}
+        ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs translate-x-0" : "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs -translate-x-full"}
         md:relative md:z-auto md:w-64 md:translate-x-0 md:shrink-0
         rounded-none md:rounded-lg bg-surface ring-1 ring-border overflow-hidden transition-transform
       `}>
@@ -243,7 +243,7 @@ function ChatPage() {
             <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
           </div>
         </div>
-        <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]">
+        <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100dvh-180px)]">
           {(threadsQ.data ?? []).map((t) => {
             const otherId = otherPartyId(t);
             const directProf = otherId ? sidebarProfilesQ.data?.get(otherId) : null;

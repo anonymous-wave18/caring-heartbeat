@@ -218,7 +218,7 @@ function ChatPage() {
             </button>
           )}
         </div>
-        {selected && userId
+        {selected && !selected.startsWith("dm:") && userId
           ? <ThreadView threadId={selected} userId={userId} />
           : <div className="grid h-full place-items-center text-sm text-muted-foreground">Selecione uma conversa.</div>}
       </div>

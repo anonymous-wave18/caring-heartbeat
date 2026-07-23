@@ -59,19 +59,15 @@ function AdminFormularios() {
         const { data: currentProfile } = await supabase
           .from("profiles").select("avatar_url, first_name, last_name").eq("id", args.user_id).maybeSingle();
 
-        const update: Record<string, any> = {
+        const { error: pErr } = await supabase.from("profiles").update({
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved",
-        };
-        if (firstName && !currentProfile?.first_name) update.first_name = firstName;
-        if (lastName && !currentProfile?.last_name) update.last_name = lastName;
-        if (formDetails?.discord_avatar_url && !currentProfile?.avatar_url) {
-          update.avatar_url = formDetails.discord_avatar_url;
-        }
-
-        const { error: pErr } = await supabase.from("profiles").update(update).eq("id", args.user_id);
+          first_name: firstName && !currentProfile?.first_name ? firstName : (currentProfile?.first_name ?? firstName),
+          last_name: lastName && !currentProfile?.last_name ? lastName : (currentProfile?.last_name ?? lastName),
+          avatar_url: currentProfile?.avatar_url || formDetails?.discord_avatar_url || null,
+        }).eq("id", args.user_id);
         if (pErr) throw pErr;
 
         // 5. Update user_roles based on slug or default

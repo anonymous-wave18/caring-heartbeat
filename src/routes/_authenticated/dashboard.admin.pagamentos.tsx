@@ -22,18 +22,43 @@ function AdminPagamentos() {
     queryKey: ["admin-payments", filter, scope, myId],
     enabled: !!myId,
     queryFn: async () => {
-      let query = supabase.from("payments")
-        .select(`
-          *,
-          payment_proofs(id,file_path,file_name,created_at),
-          profiles:user_id(id, first_name, last_name, email, recruited_by)
-        `);
+      let query = supabase.from("payments").select("*");
       if (filter !== "all") query = query.eq("status", filter);
       
       const { data, error } = await query.order("week_start", { ascending: false });
       if (error) throw error;
       
-      let rows = (data ?? []) as any[];
+      const payments = (data ?? []) as any[];
+      if (payments.length === 0) return [];
+
+      const userIds = Array.from(new Set(payments.map((p) => p.user_id).filter(Boolean)));
+      const paymentIds = payments.map((p) => p.id).filter(Boolean);
+
+      const [{ data: profiles, error: profilesError }, { data: proofs, error: proofsError }] = await Promise.all([
+        userIds.length
+          ? supabase.from("profiles").select("id, first_name, last_name, email, recruited_by").in("id", userIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        paymentIds.length
+          ? supabase.from("payment_proofs").select("id,payment_id,file_path,file_name,created_at").in("payment_id", paymentIds)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
+
+      if (profilesError) throw profilesError;
+      if (proofsError) throw proofsError;
+
+      const profilesById = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+      const proofsByPayment = new Map<string, any[]>();
+      for (const proof of proofs ?? []) {
+        const list = proofsByPayment.get(proof.payment_id) ?? [];
+        list.push(proof);
+        proofsByPayment.set(proof.payment_id, list);
+      }
+
+      let rows = payments.map((p) => ({
+        ...p,
+        profiles: profilesById.get(p.user_id) ?? null,
+        payment_proofs: proofsByPayment.get(p.id) ?? [],
+      }));
       
       // Filter by "mine" (recruited_by) client-side or we'd need a complex join filter
       if (scope === "mine" && myId) {

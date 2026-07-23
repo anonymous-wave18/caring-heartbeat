@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/pagamentos
 
 function AdminPagamentos() {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<"submitted" | "pending" | "approved" | "overdue" | "all">("submitted");
+  const [filter, setFilter] = useState<"submitted" | "pending" | "approved" | "overdue" | "all">("all");
   const [q, setQ] = useState("");
   const [scope, setScope] = useState<"mine" | "all">("mine");
   const meQ = useQuery({ queryKey: ["auth-user"], queryFn: async () => (await supabase.auth.getUser()).data.user! });

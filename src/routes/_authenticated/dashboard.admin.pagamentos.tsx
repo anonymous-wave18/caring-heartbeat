@@ -5,6 +5,7 @@ import { Loader2, Check, X, Download, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/useSiteSettings";
+import { reviewPayment, sendTransfer } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/pagamentos")({
   component: AdminPagamentos,
@@ -71,16 +72,7 @@ function AdminPagamentos() {
 
   const reviewMut = useMutation({
     mutationFn: async (args: { id: string; user_id: string; status: "approved" | "pending" }) => {
-      const { error } = await supabase.from("payments").update({
-        status: args.status,
-        approved_at: args.status === "approved" ? new Date().toISOString() : null,
-      }).eq("id", args.id);
-      if (error) throw error;
-      await supabase.from("notifications").insert({
-        user_id: args.user_id, type: "payment",
-        title: args.status === "approved" ? "Pagamento aprovado!" : "Pagamento marcado como pendente",
-        link: "/dashboard/pagamentos",
-      });
+      await reviewPayment({ data: { payment_id: args.id, status: args.status } });
     },
     onSuccess: () => { toast.success("Atualizado."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
     onError: (e: Error) => toast.error(e.message),
@@ -88,10 +80,7 @@ function AdminPagamentos() {
 
   const sendTransferMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("payments").update({
-        transfer_status: "pending",
-      }).eq("id", id);
-      if (error) throw error;
+      await sendTransfer({ data: { payment_id: id } });
     },
     onSuccess: () => { toast.success("Repasse enviado ao dono para conferência."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
     onError: (e: Error) => toast.error(e.message),

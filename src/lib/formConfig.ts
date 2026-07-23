@@ -62,6 +62,7 @@ export const DEFAULT_FORM_CONFIG: FormConfig = {
     { key: "rg_front", label: "Foto do RG (frente)", accept: "image/*", required: true },
     { key: "rg_back", label: "Foto do RG (verso)", accept: "image/*", required: true },
     { key: "selfie_rg", label: "Selfie segurando o RG", accept: "image/*", required: true },
+    { key: "address_proof", label: "Comprovante de residência", accept: "image/*,application/pdf", required: true, hint: "Conta de luz, água, internet ou similar (últimos 3 meses)." },
     { key: "discord_avatar", label: "Foto do perfil do Discord", accept: "image/*", required: true },
     { key: "video", label: "Vídeo obrigatório de compromisso", accept: "video/*", required: true, hint: "Leia o texto abaixo antes de gravar." },
     { key: "other", label: "Outros documentos (opcional)", accept: "*", required: false },

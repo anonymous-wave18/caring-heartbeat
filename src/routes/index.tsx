@@ -65,20 +65,20 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="px-6 py-24 lg:py-32">
-      <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-8">
+    <section className="px-4 py-16 sm:px-6 sm:py-24 lg:py-32">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 sm:gap-16 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-6 sm:space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1">
             <span className="size-1.5 rounded-full bg-primary" />
             <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               Organização Malta
             </span>
           </div>
-          <h1 className="max-w-[20ch] text-balance text-5xl font-medium leading-none tracking-tight md:text-6xl">
+          <h1 className="max-w-[20ch] text-balance text-3xl font-medium leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
             A infraestrutura digital da{" "}
             <span className="text-primary">Organização Malta</span>.
           </h1>
-          <p className="max-w-[52ch] text-pretty text-lg leading-relaxed text-muted-foreground">
+          <p className="max-w-[52ch] text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             Substitua planilhas e formulários por uma plataforma profissional de
             gestão de membros. Transparência financeira e automação para a Malta.
           </p>

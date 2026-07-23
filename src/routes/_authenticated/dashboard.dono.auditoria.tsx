@@ -15,16 +15,33 @@ function OwnerAuditoria() {
   const logsQ = useQuery({
     queryKey: ["audit-log", actionFilter],
     queryFn: async () => {
-      let query = supabase.from("audit_log")
-        .select("*, profiles!audit_log_actor_id_fkey(id, first_name, last_name, email)")
+      let query = supabase
+        .from("audit_log")
+        .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (actionFilter !== "all") {
         query = query.eq("action", actionFilter);
       }
 
-      const { data } = await query.limit(500);
-      return data ?? [];
+      const { data: logs, error } = await query.limit(500);
+      if (error) {
+        console.error("[auditoria] audit_log error:", error);
+        throw error;
+      }
+      const rows = logs ?? [];
+      const actorIds = Array.from(
+        new Set(rows.map((r: any) => r.actor_id).filter(Boolean)),
+      ) as string[];
+      let profileMap = new Map<string, any>();
+      if (actorIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, email")
+          .in("id", actorIds);
+        profileMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      }
+      return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.actor_id) ?? null }));
     },
   });
 

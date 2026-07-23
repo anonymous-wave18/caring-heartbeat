@@ -28,7 +28,7 @@ WHERE billing_model NOT IN ('weekly_revshare','monthly_fixed');
 CREATE OR REPLACE VIEW public.organizations_billing_view AS
 WITH member_counts AS (
   SELECT o.id AS org_id,
-         (SELECT COUNT(*) FROM public.profiles p WHERE p.status = 'active') AS active_members,
+         (SELECT COUNT(*) FROM public.profiles p WHERE p.status = 'approved') AS active_members,
          (SELECT COALESCE(SUM(amount_cents),0)
             FROM public.payments
            WHERE status = 'approved'

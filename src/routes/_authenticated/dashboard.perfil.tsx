@@ -196,7 +196,10 @@ function PostCard({ post, canDelete, onDelete }: { post: any; canDelete: boolean
       const ids = Array.from(new Set(rows.map((r) => r.user_id)));
       const profMap = new Map<string, any>();
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, first_name, last_name, avatar_url").in("id", ids);
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, avatar_url, email, discord_username")
+          .in("id", ids);
         for (const p of profs ?? []) profMap.set(p.id, p);
       }
       return rows.map((r) => ({ ...r, profile: profMap.get(r.user_id) }));
@@ -290,7 +293,12 @@ function PostCard({ post, canDelete, onDelete }: { post: any; canDelete: boolean
       {showComments && (
         <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
           {(commentsQ.data ?? []).map((c: any) => {
-            const name = `${c.profile?.first_name ?? ""} ${c.profile?.last_name ?? ""}`.trim() || "Usuário";
+            const p = c.profile;
+            const name =
+              `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim() ||
+              p?.discord_username ||
+              (p?.email ? String(p.email).split("@")[0] : "") ||
+              "Usuário";
             const canDel = meId && (c.user_id === meId || post.user_id === meId);
             return (
               <div key={c.id} className="flex items-start gap-2 text-xs">

@@ -5,8 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 const cache = new Map<string, { url: string; expiresAt: number }>();
 
 export function useAvatarUrl(path: string | null) {
+  // URLs completas (Discord CDN, etc.) são usadas diretamente — não passam pelo Storage.
+  const isFullUrl = !!path && (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("blob:") || path.startsWith("data:"));
+
   const [url, setUrl] = useState<string | null>(() => {
     if (!path) return null;
+    if (isFullUrl) return path;
     const c = cache.get(path);
     return c && c.expiresAt > Date.now() ? c.url : null;
   });
@@ -14,6 +18,10 @@ export function useAvatarUrl(path: string | null) {
   useEffect(() => {
     if (!path) {
       setUrl(null);
+      return;
+    }
+    if (isFullUrl) {
+      setUrl(path);
       return;
     }
     const cached = cache.get(path);
@@ -33,7 +41,7 @@ export function useAvatarUrl(path: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, isFullUrl]);
 
   return url;
 }

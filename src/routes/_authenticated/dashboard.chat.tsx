@@ -115,10 +115,16 @@ function ChatPage() {
   useEffect(() => {
     async function resolveThread() {
       if (threadFromUrl?.startsWith("dm:")) {
-        const memberId = threadFromUrl.split(":")[1];
-        if (!memberId) return;
+        const targetId = threadFromUrl.split(":")[1];
+        if (!targetId || !userId) return;
 
-        // Se a thread desse membro já existe, usa; senão tenta criar.
+        // Regra: threads "direct" pertencem sempre a um MEMBRO (member_id).
+        // - Staff clicando no perfil de um membro  -> abre thread daquele membro.
+        // - Membro clicando no perfil de um staff  -> abre a própria thread de suporte.
+        // - Membro clicando em outro membro        -> idem (abre a própria thread; DM entre membros
+        //   não é suportado no modelo atual e o INSERT com outro member_id seria bloqueado pela RLS).
+        const memberId = isStaff ? targetId : userId;
+
         const existing = threadsQ.data?.find((t) => t.kind === "direct" && t.member_id === memberId);
         if (existing) {
           setSelected(existing.id);
@@ -131,7 +137,8 @@ function ChatPage() {
           .select()
           .single();
         if (error) {
-          toast.error("Não foi possível abrir esta conversa.");
+          console.error("[chat] resolveThread insert error", error);
+          toast.error("Não foi possível abrir esta conversa: " + error.message);
           navigate({ to: "/dashboard/chat", search: {}, replace: true });
           return;
         }
@@ -146,7 +153,7 @@ function ChatPage() {
     if (threadsQ.data) {
       resolveThread();
     }
-  }, [threadsQ.data, selected, threadFromUrl, isStaff, qc, navigate]);
+  }, [threadsQ.data, selected, threadFromUrl, isStaff, userId, qc, navigate]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];

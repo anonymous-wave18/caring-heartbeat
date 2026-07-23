@@ -37,6 +37,7 @@ import { Route as AuthenticatedDashboardAdminPagamentosRouteImport } from './rou
 import { Route as AuthenticatedDashboardAdminMembrosRouteImport } from './routes/_authenticated/dashboard.admin.membros'
 import { Route as AuthenticatedDashboardAdminFormulariosRouteImport } from './routes/_authenticated/dashboard.admin.formularios'
 import { Route as AuthenticatedDashboardAdminFormEditorRouteImport } from './routes/_authenticated/dashboard.admin.form-editor'
+import { Route as AuthenticatedDashboardAdminFeedbackRouteImport } from './routes/_authenticated/dashboard.admin.feedback'
 import { Route as AuthenticatedDashboardAdminDocumentosRouteImport } from './routes/_authenticated/dashboard.admin.documentos'
 import { Route as AuthenticatedDashboardAdminCargosRouteImport } from './routes/_authenticated/dashboard.admin.cargos'
 import { Route as AuthenticatedDashboardAdminAvisosRouteImport } from './routes/_authenticated/dashboard.admin.avisos'
@@ -204,6 +205,12 @@ const AuthenticatedDashboardAdminFormEditorRoute =
     path: '/form-editor',
     getParentRoute: () => AuthenticatedDashboardAdminRoute,
   } as any)
+const AuthenticatedDashboardAdminFeedbackRoute =
+  AuthenticatedDashboardAdminFeedbackRouteImport.update({
+    id: '/feedback',
+    path: '/feedback',
+    getParentRoute: () => AuthenticatedDashboardAdminRoute,
+  } as any)
 const AuthenticatedDashboardAdminDocumentosRoute =
   AuthenticatedDashboardAdminDocumentosRouteImport.update({
     id: '/documentos',
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
   '/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/dashboard/admin/feedback': typeof AuthenticatedDashboardAdminFeedbackRoute
   '/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
   '/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
   '/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
@@ -267,6 +275,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
   '/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/dashboard/admin/feedback': typeof AuthenticatedDashboardAdminFeedbackRoute
   '/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
   '/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
   '/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
@@ -301,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/_authenticated/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
   '/_authenticated/dashboard/admin/documentos': typeof AuthenticatedDashboardAdminDocumentosRoute
+  '/_authenticated/dashboard/admin/feedback': typeof AuthenticatedDashboardAdminFeedbackRoute
   '/_authenticated/dashboard/admin/form-editor': typeof AuthenticatedDashboardAdminFormEditorRoute
   '/_authenticated/dashboard/admin/formularios': typeof AuthenticatedDashboardAdminFormulariosRoute
   '/_authenticated/dashboard/admin/membros': typeof AuthenticatedDashboardAdminMembrosRoute
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/avisos'
     | '/dashboard/admin/cargos'
     | '/dashboard/admin/documentos'
+    | '/dashboard/admin/feedback'
     | '/dashboard/admin/form-editor'
     | '/dashboard/admin/formularios'
     | '/dashboard/admin/membros'
@@ -363,6 +374,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/avisos'
     | '/dashboard/admin/cargos'
     | '/dashboard/admin/documentos'
+    | '/dashboard/admin/feedback'
     | '/dashboard/admin/form-editor'
     | '/dashboard/admin/formularios'
     | '/dashboard/admin/membros'
@@ -396,6 +408,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/avisos'
     | '/_authenticated/dashboard/admin/cargos'
     | '/_authenticated/dashboard/admin/documentos'
+    | '/_authenticated/dashboard/admin/feedback'
     | '/_authenticated/dashboard/admin/form-editor'
     | '/_authenticated/dashboard/admin/formularios'
     | '/_authenticated/dashboard/admin/membros'
@@ -617,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAdminFormEditorRouteImport
       parentRoute: typeof AuthenticatedDashboardAdminRoute
     }
+    '/_authenticated/dashboard/admin/feedback': {
+      id: '/_authenticated/dashboard/admin/feedback'
+      path: '/feedback'
+      fullPath: '/dashboard/admin/feedback'
+      preLoaderRoute: typeof AuthenticatedDashboardAdminFeedbackRouteImport
+      parentRoute: typeof AuthenticatedDashboardAdminRoute
+    }
     '/_authenticated/dashboard/admin/documentos': {
       id: '/_authenticated/dashboard/admin/documentos'
       path: '/documentos'
@@ -645,6 +665,7 @@ interface AuthenticatedDashboardAdminRouteChildren {
   AuthenticatedDashboardAdminAvisosRoute: typeof AuthenticatedDashboardAdminAvisosRoute
   AuthenticatedDashboardAdminCargosRoute: typeof AuthenticatedDashboardAdminCargosRoute
   AuthenticatedDashboardAdminDocumentosRoute: typeof AuthenticatedDashboardAdminDocumentosRoute
+  AuthenticatedDashboardAdminFeedbackRoute: typeof AuthenticatedDashboardAdminFeedbackRoute
   AuthenticatedDashboardAdminFormEditorRoute: typeof AuthenticatedDashboardAdminFormEditorRoute
   AuthenticatedDashboardAdminFormulariosRoute: typeof AuthenticatedDashboardAdminFormulariosRoute
   AuthenticatedDashboardAdminMembrosRoute: typeof AuthenticatedDashboardAdminMembrosRoute
@@ -660,6 +681,8 @@ const AuthenticatedDashboardAdminRouteChildren: AuthenticatedDashboardAdminRoute
       AuthenticatedDashboardAdminCargosRoute,
     AuthenticatedDashboardAdminDocumentosRoute:
       AuthenticatedDashboardAdminDocumentosRoute,
+    AuthenticatedDashboardAdminFeedbackRoute:
+      AuthenticatedDashboardAdminFeedbackRoute,
     AuthenticatedDashboardAdminFormEditorRoute:
       AuthenticatedDashboardAdminFormEditorRoute,
     AuthenticatedDashboardAdminFormulariosRoute:

@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { FileText, Download, Search, User as UserIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { logDocumentAccess, signDocumentUrl } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/documentos")({
   component: AdminDocumentos,
@@ -49,27 +51,31 @@ function AdminDocumentos() {
   }, [docsQ.data, q]);
 
   async function download(path: string, name: string) {
-    // Audit log for sensitive data access
-    const { data: me } = await supabase.auth.getUser();
-    if (me.user) {
-      const docOwner = byUser.find(u => u.docs.some(d => d.file_path === path));
-      await supabase.from("audit_log").insert({
-        actor_id: me.user.id,
-        action: "document.view",
-        entity: "recruitment_documents",
-        entity_id: path,
-        metadata: { 
-          file_name: name, 
+    try {
+      const docOwner = byUser.find((u) => u.docs.some((d) => d.file_path === path));
+      // Fire audit log (server-side) — do not block download if it fails.
+      logDocumentAccess({
+        data: {
+          file_path: path,
+          file_name: name,
           viewed_user_id: docOwner?.id,
           viewed_user_name: docOwner?.name,
-          ua: navigator.userAgent,
-          platform: navigator.platform
-        }
-      });
-    }
+        },
+      }).catch((err) => console.error("audit log failed", err));
 
-    const { data } = await supabase.storage.from("documents").createSignedUrl(path, 60);
-    if (data?.signedUrl) { const a = document.createElement("a"); a.href = data.signedUrl; a.download = name; a.target = "_blank"; a.click(); }
+      const { url } = await signDocumentUrl({ data: { file_path: path, ttl: 60 } });
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao baixar documento";
+      toast.error(msg);
+    }
   }
 
   async function downloadAllForUser(userId: string) {

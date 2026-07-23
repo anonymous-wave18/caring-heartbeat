@@ -229,7 +229,7 @@ function ChatPage() {
     : (selectedOtherProfile ? displayName(selectedOtherProfile) : "Conversa");
 
   return (
-    <div className="relative flex h-[calc(100dvh-120px)] md:h-[calc(100dvh-160px)] gap-3 sm:gap-4">
+    <div className="relative flex h-[calc(100dvh-100px)] md:h-[calc(100dvh-160px)] gap-3 sm:gap-4">
       {/* Sidebar */}
       <aside className={`
         ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs translate-x-0" : "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs -translate-x-full"}
@@ -510,14 +510,14 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
         </div>
       )}
       <form onSubmit={(e) => { e.preventDefault(); sendMut.mutate(undefined); }}
-        className="flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
+        className="shrink-0 flex items-center gap-2 border-t border-border p-2 sm:p-3 bg-surface">
         <button type="button"
           className={`p-2 rounded-full transition-colors ${recording ? "bg-destructive text-white animate-pulse" : "text-muted-foreground hover:text-primary hover:bg-primary/5"}`}
           title={recording ? "Parar" : "Gravar áudio"}
           onClick={recording ? stopRecording : startRecording}>
           {recording ? <Square className="size-5" /> : <Mic className="size-5" />}
         </button>
-        <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input flex-1" />
+        <input value={text} onChange={(e) => { setText(e.target.value); handleTyping(); }} placeholder="Digite uma mensagem…" className="input flex-1 min-w-0" />
         <button type="submit" disabled={!text.trim() || sendMut.isPending}
           className="inline-flex items-center rounded-full bg-primary p-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20">
           <Send className="size-5" />

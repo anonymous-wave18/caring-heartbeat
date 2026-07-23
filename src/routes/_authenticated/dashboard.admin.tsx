@@ -34,7 +34,7 @@ function AdminLayout() {
         <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">Administração</h1>
         <p className="mt-1 text-xs text-muted-foreground sm:text-sm">Gerenciamento completo da Malta.</p>
       </div>
-      <div className="-mx-1 flex gap-1 overflow-x-auto no-scrollbar rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
+      <div className="-mx-1 flex gap-1 overflow-x-auto rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
         {TABS.map((t) => {
           const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
           return (

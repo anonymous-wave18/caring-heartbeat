@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Settings, ShieldCheck, ScrollText, Database } from "lucide-react";
+import { Crown, Settings, ShieldCheck, ScrollText, Database, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/dono")({
   ssr: false,
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/dono")({
 const TABS = [
   { to: "/dashboard/dono", label: "Configurações", icon: Settings, exact: true },
   { to: "/dashboard/dono/permissoes", label: "Permissões", icon: ShieldCheck, exact: false },
+  { to: "/dashboard/dono/repasses", label: "Repasses", icon: Send, exact: false },
   { to: "/dashboard/dono/auditoria", label: "Auditoria", icon: ScrollText, exact: false },
   { to: "/dashboard/dono/database", label: "Banco de Dados", icon: Database, exact: false },
 ] as const;
@@ -34,7 +35,7 @@ function OwnerLayout() {
           <p className="text-xs text-muted-foreground sm:text-sm">Controle owner.</p>
         </div>
       </div>
-      <div className="-mx-1 flex gap-1 overflow-x-auto no-scrollbar rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
+      <div className="-mx-1 flex gap-1 overflow-x-auto rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
         {TABS.map((t) => {
           const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
           return (

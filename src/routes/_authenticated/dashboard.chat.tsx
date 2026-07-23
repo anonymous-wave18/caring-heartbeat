@@ -231,6 +231,7 @@ function ChatPage() {
 }
 
 function ThreadView({ threadId, userId }: { threadId: string; userId: string }) {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const msgsQ = useQuery({
     queryKey: ["messages", threadId],

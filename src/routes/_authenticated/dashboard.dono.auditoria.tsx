@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Loader2, Search, ChevronDown, CheckCircle2, XCircle, UserPlus, UserMinus,
   ShieldCheck, FileText, DollarSign, LogIn, LogOut, Settings, Eye, Trash2,
-  Pencil, Send, AlertCircle, Activity,
+  Pencil, Send, AlertCircle, Activity, Download, Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -131,6 +131,15 @@ function OwnerAuditoria() {
   const [actionFilter, setActionFilter] = useState("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
+  const retentionQ = useQuery({
+    queryKey: ["audit-retention"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("audit_retention_status" as any);
+      if (error) return null;
+      return Array.isArray(data) ? data[0] : data;
+    },
+  });
+
   const logsQ = useQuery({
     queryKey: ["audit-log", actionFilter],
     queryFn: async () => {
@@ -189,8 +198,59 @@ function OwnerAuditoria() {
 
   if (logsQ.isLoading) return <Loader2 className="size-5 animate-spin" />;
 
+  const exportCSV = () => {
+    const rows = filtered.map((l) => {
+      const m = metaFor(l.action);
+      return {
+        data: new Date(l.created_at).toLocaleString("pt-BR"),
+        acao: m.label,
+        ator: actorName(l),
+        email: l.profiles?.email ?? "",
+        entidade: l.entity ?? "",
+        entidade_id: l.entity_id ?? "",
+        detalhes: JSON.stringify(l.metadata ?? {}),
+      };
+    });
+    const headers = Object.keys(rows[0] ?? { data: "", acao: "", ator: "", email: "", entidade: "", entidade_id: "", detalhes: "" });
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => escape((r as any)[h])).join(","))].join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `auditoria_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const ret = retentionQ.data as any;
+  const daysLeft = ret?.days_until_purge != null ? Number(ret.days_until_purge) : null;
+  const showWarn = daysLeft != null && daysLeft <= 2 && ret?.total_rows > 0;
+
   return (
     <div className="space-y-4">
+      <div className="rounded-lg bg-surface p-3 text-xs ring-1 ring-border">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="size-3.5" />
+            Retenção: <b className="text-foreground">7 dias</b>. Logs mais antigos são apagados automaticamente todo dia às 03:00 UTC.
+            {ret?.total_rows != null && <span>· {ret.total_rows} evento{ret.total_rows === 1 ? "" : "s"} armazenado{ret.total_rows === 1 ? "" : "s"}</span>}
+          </div>
+          <button onClick={exportCSV} className="btn btn-ghost inline-flex items-center gap-1.5 text-xs">
+            <Download className="size-3.5" /> Exportar CSV
+          </button>
+        </div>
+        {showWarn && (
+          <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-500/10 p-2 text-amber-700 ring-1 ring-amber-500/20 dark:text-amber-400">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <b>Atenção:</b> o log mais antigo tem {Math.floor(Number(ret.oldest_age_days))} dias e será apagado em {Math.ceil(daysLeft!)} dia{Math.ceil(daysLeft!) === 1 ? "" : "s"}.
+              Exporte agora se quiser guardar um backup.
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-1 items-center gap-2 max-w-md">
           <div className="relative flex-1">

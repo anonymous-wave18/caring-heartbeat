@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedDashboardSocialRouteImport } from './routes/_authenticated/dashboard.social'
 import { Route as AuthenticatedDashboardPerfilRouteImport } from './routes/_authenticated/dashboard.perfil'
 import { Route as AuthenticatedDashboardPagamentosRouteImport } from './routes/_authenticated/dashboard.pagamentos'
 import { Route as AuthenticatedDashboardMasterRouteImport } from './routes/_authenticated/dashboard.master'
@@ -65,6 +66,12 @@ const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardSocialRoute =
+  AuthenticatedDashboardSocialRouteImport.update({
+    id: '/social',
+    path: '/social',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPerfilRoute =
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/master': typeof AuthenticatedDashboardMasterRouteWithChildren
   '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/dashboard/social': typeof AuthenticatedDashboardSocialRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
@@ -271,6 +279,7 @@ export interface FileRoutesByTo {
   '/dashboard/formulario': typeof AuthenticatedDashboardFormularioRoute
   '/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/dashboard/social': typeof AuthenticatedDashboardSocialRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
@@ -306,6 +315,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/master': typeof AuthenticatedDashboardMasterRouteWithChildren
   '/_authenticated/dashboard/pagamentos': typeof AuthenticatedDashboardPagamentosRoute
   '/_authenticated/dashboard/perfil': typeof AuthenticatedDashboardPerfilRoute
+  '/_authenticated/dashboard/social': typeof AuthenticatedDashboardSocialRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/dashboard/admin/avisos': typeof AuthenticatedDashboardAdminAvisosRoute
   '/_authenticated/dashboard/admin/cargos': typeof AuthenticatedDashboardAdminCargosRoute
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/dashboard/master'
     | '/dashboard/pagamentos'
     | '/dashboard/perfil'
+    | '/dashboard/social'
     | '/dashboard/'
     | '/dashboard/admin/avisos'
     | '/dashboard/admin/cargos'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/dashboard/formulario'
     | '/dashboard/pagamentos'
     | '/dashboard/perfil'
+    | '/dashboard/social'
     | '/dashboard'
     | '/dashboard/admin/avisos'
     | '/dashboard/admin/cargos'
@@ -404,6 +416,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/master'
     | '/_authenticated/dashboard/pagamentos'
     | '/_authenticated/dashboard/perfil'
+    | '/_authenticated/dashboard/social'
     | '/_authenticated/dashboard/'
     | '/_authenticated/dashboard/admin/avisos'
     | '/_authenticated/dashboard/admin/cargos'
@@ -467,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/social': {
+      id: '/_authenticated/dashboard/social'
+      path: '/social'
+      fullPath: '/dashboard/social'
+      preLoaderRoute: typeof AuthenticatedDashboardSocialRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/perfil': {
@@ -762,6 +782,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardMasterRoute: typeof AuthenticatedDashboardMasterRouteWithChildren
   AuthenticatedDashboardPagamentosRoute: typeof AuthenticatedDashboardPagamentosRoute
   AuthenticatedDashboardPerfilRoute: typeof AuthenticatedDashboardPerfilRoute
+  AuthenticatedDashboardSocialRoute: typeof AuthenticatedDashboardSocialRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -780,6 +801,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardPagamentosRoute:
       AuthenticatedDashboardPagamentosRoute,
     AuthenticatedDashboardPerfilRoute: AuthenticatedDashboardPerfilRoute,
+    AuthenticatedDashboardSocialRoute: AuthenticatedDashboardSocialRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 

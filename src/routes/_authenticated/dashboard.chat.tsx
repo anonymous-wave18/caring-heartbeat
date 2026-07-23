@@ -33,10 +33,31 @@ function useProfilesBasic(ids: string[]) {
     enabled: key.length > 0,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_profiles_basic", { _ids: key });
-      if (error) throw error;
       const map = new Map<string, BasicProfile>();
-      for (const r of (data ?? []) as BasicProfile[]) map.set(r.id, r);
+      // 1) tenta a RPC (rápida, já traz is_staff)
+      const rpc = await supabase.rpc("get_profiles_basic", { _ids: key });
+      if (!rpc.error && rpc.data && rpc.data.length > 0) {
+        for (const r of rpc.data as BasicProfile[]) map.set(r.id, r);
+        return map;
+      }
+      // 2) fallback direto: profiles + user_roles
+      const [{ data: profs }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("id, first_name, last_name, avatar_url, cargo_id").in("id", key),
+        supabase.from("user_roles").select("user_id, role").in("user_id", key),
+      ]);
+      const staffSet = new Set(
+        (roles ?? []).filter((r: any) => r.role === "owner" || r.role === "admin").map((r: any) => r.user_id),
+      );
+      for (const p of profs ?? []) {
+        map.set(p.id, {
+          id: p.id,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          avatar_url: p.avatar_url,
+          cargo_id: (p as any).cargo_id ?? null,
+          is_staff: staffSet.has(p.id),
+        });
+      }
       return map;
     },
   });
@@ -333,7 +354,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   <div className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"}`}>
                     {!isMe && (
                       <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                        <span className="text-foreground/80 hover:text-primary cursor-pointer" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{p?.is_staff ? (p.first_name || "Admin") : (p?.first_name || "Membro")}</span>
+                        <span className="text-foreground/80 hover:text-primary cursor-pointer" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{displayName(p)}</span>
                         {p?.is_staff && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                             <Shield className="size-2.5" /> ADM

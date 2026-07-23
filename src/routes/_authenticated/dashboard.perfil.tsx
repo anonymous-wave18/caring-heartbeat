@@ -406,6 +406,35 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
       return !!data;
     },
   });
+
+  // Contagens sociais (seguidores, seguindo, conquistas) + cargo
+  const statsQ = useQuery({
+    queryKey: ["public-profile-stats", profile.id],
+    queryFn: async () => {
+      const [followers, following, achievements, roles, cargo] = await Promise.all([
+        (supabase.from("user_follows" as any) as any)
+          .select("*", { count: "exact", head: true }).eq("following_id", profile.id),
+        (supabase.from("user_follows" as any) as any)
+          .select("*", { count: "exact", head: true }).eq("follower_id", profile.id),
+        (supabase.from("user_achievements" as any) as any)
+          .select("*", { count: "exact", head: true }).eq("user_id", profile.id),
+        supabase.from("user_roles").select("role").eq("user_id", profile.id),
+        (profile as any).cargo_id
+          ? supabase.from("cargos").select("name").eq("id", (profile as any).cargo_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      const roleSet = new Set((roles.data ?? []).map((r: any) => r.role));
+      const primaryRole = roleSet.has("owner") ? "Dono" : roleSet.has("admin") ? "Administrador" : "Membro";
+      return {
+        followers: followers.count ?? 0,
+        following: following.count ?? 0,
+        achievements: achievements.count ?? 0,
+        role: primaryRole,
+        cargoName: (cargo as any)?.data?.name ?? null,
+      };
+    },
+  });
+
   const followMut = useMutation({
     mutationFn: async () => {
       if (followingQ.data) {
@@ -416,7 +445,10 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["is-following", currentUserId, profile.id] }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["is-following", currentUserId, profile.id] });
+      qc.invalidateQueries({ queryKey: ["public-profile-stats", profile.id] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -426,19 +458,43 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
     }
   });
 
+  const daysInOrg = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000),
+  );
+
   return (
     <div className="space-y-6">
+      {/* Barra estilo Instagram: seguidores / seguindo / conquistas */}
+      <div className="grid grid-cols-3 gap-3 rounded-xl bg-surface p-4 ring-1 ring-border text-center">
+        <div>
+          <div className="text-2xl font-semibold">{statsQ.data?.followers ?? 0}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Seguidores</div>
+        </div>
+        <div>
+          <div className="text-2xl font-semibold">{statsQ.data?.following ?? 0}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Seguindo</div>
+        </div>
+        <div>
+          <div className="text-2xl font-semibold">{statsQ.data?.achievements ?? 0}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Conquistas</div>
+        </div>
+      </div>
+
       <div className="flex gap-3">
         <button onClick={() => followMut.mutate()} disabled={followMut.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
           {followingQ.data ? "Seguindo" : "Seguir"}
         </button>
         <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border">Enviar Mensagem (DM)</button>
       </div>
+
       <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">
         <h3 className="font-medium">Sobre</h3>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div><div className="text-xs text-muted-foreground uppercase">Cargo</div><div>{statsQ.data?.role ?? "Membro"}{statsQ.data?.cargoName ? ` · ${statsQ.data.cargoName}` : ""}</div></div>
           <div><div className="text-xs text-muted-foreground uppercase">Discord</div><div>{profile.discord_username || "—"}</div></div>
           <div><div className="text-xs text-muted-foreground uppercase">Membro desde</div><div>{new Date(profile.created_at).toLocaleDateString("pt-BR")}</div></div>
+          <div><div className="text-xs text-muted-foreground uppercase">Tempo na organização</div><div>{daysInOrg} dia{daysInOrg > 1 ? "s" : ""}</div></div>
         </div>
       </section>
       <AchievementsSection userId={profile.id} />

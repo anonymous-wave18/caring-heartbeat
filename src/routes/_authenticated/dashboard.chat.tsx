@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Send, Hash, User as UserIcon, Loader2, Shield, Menu, X, ArrowLeft, Trash2, Mic, Reply, UserPlus, Square, MessageSquarePlus } from "lucide-react";
@@ -105,6 +105,7 @@ function ChatPage() {
   }, [userId, isStaff, threadsQ.data, qc]);
 
   const { thread_id: threadFromUrl } = Route.useSearch();
+  const navigate = useNavigate();
   // Nunca selecionamos um pseudo-id "dm:..." como thread real — só um UUID válido.
   const [selected, setSelected] = useState<string | null>(
     threadFromUrl && !threadFromUrl.startsWith("dm:") ? threadFromUrl : null,
@@ -121,6 +122,7 @@ function ChatPage() {
         const existing = threadsQ.data?.find((t) => t.kind === "direct" && t.member_id === memberId);
         if (existing) {
           setSelected(existing.id);
+          navigate({ to: "/dashboard/chat", search: {}, replace: true });
           return;
         }
         const { data, error } = await supabase
@@ -130,10 +132,12 @@ function ChatPage() {
           .single();
         if (error) {
           toast.error("Não foi possível abrir esta conversa.");
+          navigate({ to: "/dashboard/chat", search: {}, replace: true });
           return;
         }
         qc.invalidateQueries({ queryKey: ["threads"] });
         setSelected(data.id);
+        navigate({ to: "/dashboard/chat", search: {}, replace: true });
       } else if (!selected && threadsQ.data && threadsQ.data.length > 0) {
         setSelected(threadsQ.data[0].id);
       }
@@ -142,7 +146,7 @@ function ChatPage() {
     if (threadsQ.data) {
       resolveThread();
     }
-  }, [threadsQ.data, selected, threadFromUrl, isStaff, qc]);
+  }, [threadsQ.data, selected, threadFromUrl, isStaff, qc, navigate]);
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];

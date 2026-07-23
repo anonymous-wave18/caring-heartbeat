@@ -176,6 +176,24 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS pix_beneficiary TEXT,
   ADD COLUMN IF NOT EXISTS recruited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
+-- 9) PUBLICAÇÕES do perfil (feed social)
+CREATE TABLE IF NOT EXISTS public.profile_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profile_posts TO authenticated;
+GRANT ALL ON public.profile_posts TO service_role;
+ALTER TABLE public.profile_posts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "posts read all" ON public.profile_posts;
+CREATE POLICY "posts read all" ON public.profile_posts FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "posts insert own" ON public.profile_posts;
+CREATE POLICY "posts insert own" ON public.profile_posts FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "posts delete own" ON public.profile_posts;
+CREATE POLICY "posts delete own" ON public.profile_posts FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS profile_posts_user_created_idx ON public.profile_posts (user_id, created_at DESC);
+
 -- ============================================================
 -- FIM. Recarregue o site depois de rodar.
 -- ============================================================

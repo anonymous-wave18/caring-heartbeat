@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Upload, KeyRound, Save, Trophy, Send, Trash2 } from "lucide-react";
+import { Loader2, Upload, KeyRound, Save, Trophy, Send, Trash2, Heart, MessageCircle } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
@@ -164,20 +164,167 @@ function PostsSection({ profileId, canPost }: { profileId: string; canPost: bool
           <div className="text-sm text-muted-foreground text-center py-6">Nenhuma publicação ainda.</div>
         )}
         {(postsQ.data ?? []).map((p: any) => (
-          <div key={p.id} className="rounded-lg bg-surface-muted/40 p-3 ring-1 ring-border">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm whitespace-pre-wrap break-words flex-1">{p.body}</p>
-              {canPost && (
-                <button onClick={() => delMut.mutate(p.id)} className="text-muted-foreground hover:text-destructive p-1" title="Apagar">
-                  <Trash2 className="size-3.5" />
-                </button>
-              )}
-            </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">{new Date(p.created_at).toLocaleString("pt-BR")}</div>
-          </div>
+          <PostCard key={p.id} post={p} canDelete={canPost} onDelete={() => delMut.mutate(p.id)} />
         ))}
       </div>
     </section>
+  );
+}
+
+function PostCard({ post, canDelete, onDelete }: { post: any; canDelete: boolean; onDelete: () => void }) {
+  const qc = useQueryClient();
+  const [showComments, setShowComments] = useState(false);
+  const [comment, setComment] = useState("");
+  const meQ = useQuery({ queryKey: ["auth-user-id"], queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null });
+  const meId = meQ.data;
+
+  const likesQ = useQuery({
+    queryKey: ["post-likes", post.id],
+    queryFn: async () => {
+      const { data } = await (supabase.from("post_likes" as any) as any).select("user_id").eq("post_id", post.id);
+      return (data ?? []) as { user_id: string }[];
+    },
+  });
+  const commentsQ = useQuery({
+    queryKey: ["post-comments", post.id],
+    enabled: showComments,
+    queryFn: async () => {
+      const { data } = await (supabase.from("post_comments" as any) as any)
+        .select("id, body, created_at, user_id")
+        .eq("post_id", post.id).order("created_at");
+      const rows = (data ?? []) as any[];
+      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
+      const profMap = new Map<string, any>();
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, first_name, last_name, avatar_url").in("id", ids);
+        for (const p of profs ?? []) profMap.set(p.id, p);
+      }
+      return rows.map((r) => ({ ...r, profile: profMap.get(r.user_id) }));
+    },
+  });
+  const commentsCountQ = useQuery({
+    queryKey: ["post-comments-count", post.id],
+    queryFn: async () => {
+      const { count } = await (supabase.from("post_comments" as any) as any)
+        .select("*", { count: "exact", head: true }).eq("post_id", post.id);
+      return count ?? 0;
+    },
+  });
+
+  const liked = !!(meId && likesQ.data?.some((l) => l.user_id === meId));
+  const likeCount = likesQ.data?.length ?? 0;
+
+  const likeMut = useMutation({
+    mutationFn: async () => {
+      if (!meId) throw new Error("Sessão expirada.");
+      if (liked) {
+        const { error } = await (supabase.from("post_likes" as any) as any).delete().eq("post_id", post.id).eq("user_id", meId);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from("post_likes" as any) as any).insert({ post_id: post.id, user_id: meId });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["post-likes", post.id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const commentMut = useMutation({
+    mutationFn: async () => {
+      const text = comment.trim();
+      if (!text) throw new Error("Escreva um comentário.");
+      if (!meId) throw new Error("Sessão expirada.");
+      const { error } = await (supabase.from("post_comments" as any) as any)
+        .insert({ post_id: post.id, user_id: meId, body: text });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setComment("");
+      qc.invalidateQueries({ queryKey: ["post-comments", post.id] });
+      qc.invalidateQueries({ queryKey: ["post-comments-count", post.id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const delCommentMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("post_comments" as any) as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["post-comments", post.id] });
+      qc.invalidateQueries({ queryKey: ["post-comments-count", post.id] });
+    },
+  });
+
+  return (
+    <div className="rounded-lg bg-surface-muted/40 p-3 ring-1 ring-border">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm whitespace-pre-wrap break-words flex-1">{post.body}</p>
+        {canDelete && (
+          <button onClick={onDelete} className="text-muted-foreground hover:text-destructive p-1" title="Apagar">
+            <Trash2 className="size-3.5" />
+          </button>
+        )}
+      </div>
+      <div className="mt-1 text-[11px] text-muted-foreground">{new Date(post.created_at).toLocaleString("pt-BR")}</div>
+
+      <div className="mt-2 flex items-center gap-4 border-t border-border/60 pt-2">
+        <button
+          onClick={() => likeMut.mutate()}
+          disabled={likeMut.isPending}
+          className={`inline-flex items-center gap-1.5 text-xs transition-colors ${liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+        >
+          <Heart className={`size-4 ${liked ? "fill-current" : ""}`} />
+          <span>{likeCount}</span>
+        </button>
+        <button
+          onClick={() => setShowComments((s) => !s)}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <MessageCircle className="size-4" />
+          <span>{commentsCountQ.data ?? 0}</span>
+        </button>
+      </div>
+
+      {showComments && (
+        <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
+          {(commentsQ.data ?? []).map((c: any) => {
+            const name = `${c.profile?.first_name ?? ""} ${c.profile?.last_name ?? ""}`.trim() || "Usuário";
+            const canDel = meId && (c.user_id === meId || post.user_id === meId);
+            return (
+              <div key={c.id} className="flex items-start gap-2 text-xs">
+                <div className="flex-1 rounded-md bg-background/60 px-2 py-1.5">
+                  <div className="font-medium text-foreground">{name}</div>
+                  <div className="whitespace-pre-wrap break-words text-muted-foreground">{c.body}</div>
+                </div>
+                {canDel && (
+                  <button onClick={() => delCommentMut.mutate(c.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Apagar">
+                    <Trash2 className="size-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          {commentsQ.data && commentsQ.data.length === 0 && (
+            <div className="text-[11px] text-muted-foreground text-center py-1">Seja o primeiro a comentar.</div>
+          )}
+          <form onSubmit={(e) => { e.preventDefault(); commentMut.mutate(); }} className="flex gap-1.5">
+            <input
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={500}
+              placeholder="Escreva um comentário…"
+              className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-primary/60"
+            />
+            <button type="submit" disabled={commentMut.isPending || !comment.trim()}
+              className="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50">
+              <Send className="size-3" />
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }
 

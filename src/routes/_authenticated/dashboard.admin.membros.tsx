@@ -87,7 +87,7 @@ function AdminMembros() {
             const cargo: any = key === "__none" ? null : cargoById.get(key);
             const rows = groups.get(key)!;
             return (
-              <div key={key} className="overflow-hidden rounded-lg bg-surface ring-1 ring-border">
+              <div key={key} className="rounded-lg bg-surface ring-1 ring-border">
                 <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
                   <div className="inline-flex items-center gap-2">
                     <span className="inline-block size-3 rounded-full ring-1 ring-border" style={{ background: cargo?.color ?? "#64748b" }} />
@@ -95,7 +95,8 @@ function AdminMembros() {
                     <span className="rounded-full bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground ring-1 ring-border">{rows.length}</span>
                   </div>
                 </div>
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-sm">
                   <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="px-4 py-2.5">Membro</th>
@@ -135,6 +136,7 @@ function AdminMembros() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             );
           })}

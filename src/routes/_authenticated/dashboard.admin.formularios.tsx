@@ -157,8 +157,8 @@ function AdminFormularios() {
       </div>
 
       {formsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (
-        <div className="overflow-hidden rounded-lg bg-surface ring-1 ring-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg bg-surface ring-1 ring-border">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Membro</th>

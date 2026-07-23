@@ -14,7 +14,16 @@ export const Route = createFileRoute("/_authenticated/dashboard/chat")({
   component: ChatPage,
 });
 
-type BasicProfile = { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null; cargo_id: string | null; is_staff: boolean };
+type BasicProfile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  cargo_id: string | null;
+  is_staff: boolean;
+  discord_username?: string | null;
+  email?: string | null;
+};
 
 function initials(p?: BasicProfile | null) {
   const a = (p?.first_name ?? "").trim()[0] ?? "";
@@ -23,7 +32,10 @@ function initials(p?: BasicProfile | null) {
 }
 function displayName(p?: BasicProfile | null) {
   const n = `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim();
-  return n || "Usuário";
+  return n || p?.discord_username || p?.email?.split("@")[0] || "Usuário";
+}
+function parseDmTargetId(title?: string | null) {
+  return title?.startsWith("dm:") ? title.slice(3) : null;
 }
 
 function useProfilesBasic(ids: string[]) {
@@ -34,15 +46,16 @@ function useProfilesBasic(ids: string[]) {
     staleTime: 60_000,
     queryFn: async () => {
       const map = new Map<string, BasicProfile>();
-      // 1) tenta a RPC (rápida, já traz is_staff)
+      // 1) tenta a RPC (rápida, já traz is_staff). Mesmo quando ela existe,
+      // fazemos merge com profiles abaixo porque alguns bancos externos estão
+      // com a RPC antiga e retornam avatar_url nulo/desatualizado.
       const rpc = await supabase.rpc("get_profiles_basic", { _ids: key });
       if (!rpc.error && rpc.data && rpc.data.length > 0) {
         for (const r of rpc.data as BasicProfile[]) map.set(r.id, r);
-        return map;
       }
-      // 2) fallback direto: profiles + user_roles
+      // 2) profiles + user_roles sempre vencem para nome/foto atualizados manualmente no site.
       const [{ data: profs }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("id, first_name, last_name, avatar_url, cargo_id").in("id", key),
+        supabase.from("profiles").select("id, first_name, last_name, avatar_url, cargo_id, discord_username, email").in("id", key),
         supabase.from("user_roles").select("user_id, role").in("user_id", key),
       ]);
       const staffSet = new Set(
@@ -56,6 +69,8 @@ function useProfilesBasic(ids: string[]) {
           avatar_url: p.avatar_url,
           cargo_id: (p as any).cargo_id ?? null,
           is_staff: staffSet.has(p.id),
+          discord_username: (p as any).discord_username ?? null,
+          email: (p as any).email ?? null,
         });
       }
       return map;
@@ -71,8 +86,8 @@ function ChatPage() {
   const { isStaff } = computeRoleFlags(rolesQ.data);
 
   const threadsQ = useQuery({
-    queryKey: ["threads", userId],
-    enabled: !!userId,
+    queryKey: ["threads", userId, isStaff],
+    enabled: !!userId && !rolesQ.isLoading,
     queryFn: async () => {
       // For staff: see all threads. For members: see threads they are part of (member_id = userId) or general
       let q = supabase.from("chat_threads").select("*");
@@ -118,22 +133,28 @@ function ChatPage() {
         const targetId = threadFromUrl.split(":")[1];
         if (!targetId || !userId) return;
 
-        // Regra: threads "direct" pertencem sempre a um MEMBRO (member_id).
-        // - Staff clicando no perfil de um membro  -> abre thread daquele membro.
-        // - Membro clicando no perfil de um staff  -> abre a própria thread de suporte.
-        // - Membro clicando em outro membro        -> idem (abre a própria thread; DM entre membros
-        //   não é suportado no modelo atual e o INSERT com outro member_id seria bloqueado pela RLS).
+        const { data: targetRoles } = await supabase.from("user_roles").select("role").eq("user_id", targetId);
+        const targetIsStaff = (targetRoles ?? []).some((r: any) => r.role === "admin" || r.role === "owner");
         const memberId = isStaff ? targetId : userId;
+        const title = targetIsStaff || targetId === userId ? `dm:${targetId}` : `dm:${targetId}`;
 
-        const existing = threadsQ.data?.find((t) => t.kind === "direct" && t.member_id === memberId);
+        const existing = threadsQ.data?.find((t) => {
+          if (t.kind !== "direct" || t.member_id !== memberId) return false;
+          if (parseDmTargetId(t.title) === targetId) return true;
+          return !isStaff && targetIsStaff;
+        });
         if (existing) {
+          if (existing.title !== title) {
+            await supabase.from("chat_threads").update({ title }).eq("id", existing.id);
+            qc.invalidateQueries({ queryKey: ["threads"] });
+          }
           setSelected(existing.id);
           navigate({ to: "/dashboard/chat", search: {}, replace: true });
           return;
         }
         const { data, error } = await supabase
           .from("chat_threads")
-          .insert({ kind: "direct", member_id: memberId, title: "Privado" })
+          .insert({ kind: "direct", member_id: memberId, title })
           .select()
           .single();
         if (error) {
@@ -157,7 +178,15 @@ function ChatPage() {
 
   // Load basic profile info for thread member_ids (to show name on the sidebar)
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];
-  const sidebarProfilesQ = useProfilesBasic(memberIds);
+  const dmTargetIds = (threadsQ.data ?? []).map((t) => parseDmTargetId(t.title)).filter(Boolean) as string[];
+  const sidebarProfilesQ = useProfilesBasic([...(userId ? [userId] : []), ...memberIds, ...dmTargetIds]);
+  const selectedThread = selected ? threadsQ.data?.find((t) => t.id === selected) : null;
+  const selectedTargetId = parseDmTargetId(selectedThread?.title);
+  const selectedTargetProfile = selectedTargetId ? sidebarProfilesQ.data?.get(selectedTargetId) : null;
+  const selectedMemberProfile = selectedThread?.member_id ? sidebarProfilesQ.data?.get(selectedThread.member_id) : null;
+  const selectedLabel = selectedThread?.kind === "general"
+    ? "Geral"
+    : displayName((!isStaff && selectedTargetProfile) ? selectedTargetProfile : selectedMemberProfile) || "Conversa";
 
   return (
     <div className="relative flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] gap-4">
@@ -177,13 +206,16 @@ function ChatPage() {
         <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]">
           {(threadsQ.data ?? []).map((t) => {
             const memberProf = t.member_id ? sidebarProfilesQ.data?.get(t.member_id) : null;
+            const dmTargetId = parseDmTargetId(t.title);
+            const targetProf = dmTargetId ? sidebarProfilesQ.data?.get(dmTargetId) : null;
+            const directProf = !isStaff && targetProf ? targetProf : memberProf;
             let label = t.title ?? "Conversa";
             
             if (t.kind === "general") {
               label = "Geral";
             } else if (t.kind === "direct") {
-              if (isStaff && memberProf) {
-                label = displayName(memberProf);
+              if (directProf) {
+                label = displayName(directProf);
               } else if (!isStaff) {
                  label = "Suporte Malta";
               } else if (isStaff && !memberProf && t.member_id) {
@@ -198,7 +230,7 @@ function ChatPage() {
                     selected === t.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-surface-muted"
                   }`}>
                   <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[10px]">
-                    {t.kind === "general" ? <Hash className="size-4" /> : <AvatarImage path={memberProf?.avatar_url} fallback={initials(memberProf)} />}
+                    {t.kind === "general" ? <Hash className="size-4" /> : <AvatarImage path={directProf?.avatar_url} fallback={initials(directProf)} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{label}</div>
@@ -221,7 +253,7 @@ function ChatPage() {
             <Menu className="size-4" />
           </button>
           <span className="text-sm font-medium truncate flex-1">
-            {selected ? (threadsQ.data?.find((t) => t.id === selected)?.title === 'Suporte' && !isStaff ? 'Suporte' : (threadsQ.data?.find((t) => t.id === selected)?.title ?? "Conversa")) : "Conversas"}
+            {selected ? selectedLabel : "Conversas"}
           </span>
           {selected && (
             <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSelected(null)}>
@@ -476,8 +508,12 @@ function SwipeableRow({ children, onSwipeReply }: { children: ReactNode; onSwipe
 
 function AvatarImage({ path, fallback }: { path: string | null | undefined; fallback: string }) {
   const url = useAvatarUrl(path ?? null);
-  if (url) return <img src={url} alt="" className="size-full object-cover" />;
-  if (path && (path.startsWith("http") || path.startsWith("blob:"))) return <img src={path} alt="" className="size-full object-cover" />;
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [url, path]);
+  if (url && !failed) return <img src={url} alt="" className="size-full object-cover" onError={() => setFailed(true)} />;
+  if (path && !failed && (path.startsWith("http") || path.startsWith("blob:"))) {
+    return <img src={path} alt="" className="size-full object-cover" onError={() => setFailed(true)} />;
+  }
   return <>{fallback}</>;
 }
 

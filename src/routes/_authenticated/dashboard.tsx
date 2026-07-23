@@ -64,6 +64,9 @@ function DashboardLayout() {
   const { isStaff, isOwner, primary } = computeRoleFlags(roleQuery.data);
   const profile = profileQuery.data;
   const avatarUrl = useAvatarUrl(profile?.avatar_url ?? null);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => setAvatarFailed(false), [avatarUrl, profile?.avatar_url]);
 
   const unreadNotifQuery = useQuery({
     queryKey: ["notif-unread", user.id],
@@ -182,8 +185,8 @@ function DashboardLayout() {
         {/* Profile chip */}
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">
           <div className="size-10 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="size-full object-cover" loading="lazy" />
+            {avatarUrl && !avatarFailed ? (
+              <img src={avatarUrl} alt="" className="size-full object-cover" loading="lazy" onError={() => setAvatarFailed(true)} />
             ) : (
               <div className="flex size-full items-center justify-center text-sm font-semibold text-muted-foreground">
                 {initial}

@@ -40,7 +40,7 @@ function SecurityPage() {
       </div>
       <div className="rounded-xl bg-surface ring-1 ring-border overflow-hidden">
         {query.isLoading && <div className="p-6 text-center"><Loader2 className="inline size-4 animate-spin" /></div>}
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-surface-muted/50 text-xs uppercase text-muted-foreground">
             <tr><th className="px-4 py-2 text-left">Quando</th><th className="px-4 py-2 text-left">Ação</th><th className="px-4 py-2 text-left">Entidade</th><th className="px-4 py-2 text-left">Ator</th></tr>
           </thead>

@@ -53,8 +53,8 @@ function MasterOverview() {
 
       <div className="rounded-xl bg-surface p-6 ring-1 ring-border">
         <h2 className="text-lg font-medium mb-4">Instâncias e Organizações</h2>
-        <div className="overflow-hidden rounded-lg ring-1 ring-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg ring-1 ring-border">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-surface-muted/50 border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Organização</th>

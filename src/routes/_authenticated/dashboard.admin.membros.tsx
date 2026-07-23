@@ -95,7 +95,7 @@ function AdminMembros() {
                     <span className="rounded-full bg-background/60 px-2 py-0.5 text-[10px] text-muted-foreground ring-1 ring-border">{rows.length}</span>
                   </div>
                 </div>
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[640px] text-sm">
                   <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="px-4 py-2.5">Membro</th>

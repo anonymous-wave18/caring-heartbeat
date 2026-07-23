@@ -45,8 +45,8 @@ function RepassesPage() {
         <h1 className="text-2xl font-medium">Repasses dos recrutadores</h1>
         <p className="text-sm text-muted-foreground">Confirme quando o admin enviar o PIX recebido dos membros.</p>
       </div>
-      <div className="overflow-hidden rounded-lg bg-surface ring-1 ring-border">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg bg-surface ring-1 ring-border">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-surface-muted text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Recrutador</th>

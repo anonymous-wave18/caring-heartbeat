@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Trash2, Pin, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { broadcastAnnouncement } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/avisos")({
   component: AdminAvisos,
@@ -30,21 +31,9 @@ function AdminAvisos() {
       }).select().single();
       if (error) throw error;
       if (notify) {
-        const audienceFilter = audience === "staff" ? { in: ["admin", "owner"] } : null;
-        let userIdsQ = supabase.from("profiles").select("id");
-        if (audience === "members") userIdsQ = userIdsQ.eq("status", "approved");
-        const { data: profs } = await userIdsQ;
-        let targets = (profs ?? []).map((p) => p.id);
-        if (audienceFilter) {
-          const { data: roles } = await supabase.from("user_roles").select("user_id").in("role", audienceFilter.in as any);
-          const set = new Set((roles ?? []).map((r) => r.user_id));
-          targets = targets.filter((id) => set.has(id));
-        }
-        if (targets.length) {
-          await supabase.from("notifications").insert(targets.map((user_id) => ({
-            user_id, type: "announcement", title: `📣 ${ann.title}`, body: ann.body, link: "/dashboard/avisos",
-          })));
-        }
+        // Server-side fan-out: recipient list stays on the server,
+        // and role is re-verified before any notifications are inserted.
+        await broadcastAnnouncement({ data: { announcement_id: ann.id } });
       }
     },
     onSuccess: () => {

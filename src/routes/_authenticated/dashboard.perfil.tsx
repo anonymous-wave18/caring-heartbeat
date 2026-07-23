@@ -777,7 +777,11 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
         <button onClick={() => followMut.mutate()} disabled={followMut.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
           {followingQ.data ? "Seguindo" : "Seguir"}
         </button>
-        <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border">Enviar Mensagem (DM)</button>
+        {canDM && (
+          <button onClick={() => startDMMut.mutate()} className="inline-flex items-center gap-2 rounded-md bg-surface-muted px-4 py-2 text-sm font-medium ring-1 ring-border hover:bg-surface-muted/70 transition-colors">
+            Enviar Mensagem (DM)
+          </button>
+        )}
       </div>
 
       <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">

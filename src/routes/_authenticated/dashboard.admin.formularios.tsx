@@ -214,7 +214,14 @@ function FormDetail({ form, onClose, onApprove, onReject }: {
           <Info label="Banco" value={form.bank_name ?? "—"} />
           <Info label="Titular do banco" value={form.bank_holder ?? "—"} />
           <Info label="Discord" value={form.discord_contact ?? "—"} />
-          <Info label="Foto Discord" value={form.discord_avatar_url ?? "—"} />
+          <div>
+            <dt className="text-xs text-muted-foreground">Foto Discord</dt>
+            <dd className="mt-1">
+              {form.discord_avatar_url
+                ? <img src={form.discord_avatar_url} alt="Discord" className="size-12 rounded-full ring-1 ring-border" />
+                : "—"}
+            </dd>
+          </div>
           <Info label="Telefone" value={form.phone_self ?? "—"} />
           <Info label="Telefone pai" value={form.phone_father ?? "—"} />
           <Info label="Telefone mãe" value={form.phone_mother ?? "—"} />

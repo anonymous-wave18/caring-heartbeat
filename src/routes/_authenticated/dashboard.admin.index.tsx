@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { toast } from "sonner";
 import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileCheck, BarChart3 } from "lucide-react";
@@ -102,7 +102,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Membros Ativos" value={counts.approved} trend="+12%" icon={<Users className="size-4" />} />
+        <MetricCard label="Membros Ativos" value={counts.approved} icon={<Users className="size-4" />} />
         <MetricCard label="Pendentes" value={counts.pending} trend="ação requerida" highlight icon={<FileCheck className="size-4" />} />
         <MetricCard label="Taxa de Aprovação" value={`${all.length ? Math.round((counts.approved / all.length) * 100) : 0}%`} icon={<TrendingUp className="size-4" />} />
         <MetricCard label="Total Cadastros" value={all.length} icon={<BarChart3 className="size-4" />} />
@@ -193,6 +193,35 @@ function AdminPage() {
             </button>
           ))}
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const csvRows = filtered.map(m => {
+                const row = [
+                  m.id,
+                  `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
+                  m.email,
+                  m.status,
+                  m.form_status,
+                  m.pix_key ?? "",
+                  m.pix_key_type ?? "",
+                  m.pix_beneficiary ?? ""
+                ];
+                return row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+              });
+              const header = "ID,Nome,Email,Status,Formulario,PIX_Chave,PIX_Tipo,PIX_Beneficiario";
+              const csv = header + "\n" + csvRows.join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.setAttribute('href', url);
+              a.setAttribute('download', `membros_malta_${new Date().toISOString().split('T')[0]}.csv`);
+              document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            }}
+            className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-3 py-2 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
+          >
+            <Download className="size-3.5" /> Exportar CSV
+          </button>
         <div className="relative w-full max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -201,6 +230,7 @@ function AdminPage() {
             placeholder="Buscar por nome, e-mail, Discord…"
             className="w-full rounded-md border border-border bg-surface py-2 pl-9 pr-3 text-sm outline-none ring-primary/30 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2"
           />
+        </div>
         </div>
       </div>
 
@@ -272,38 +302,6 @@ function AdminPage() {
                     title="Excluir"
                   >
                     <Trash2 className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const csvRows = filtered.map(m => {
-                        const row = [
-                          m.id,
-                          `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
-                          m.email,
-                          m.status,
-                          m.form_status,
-                          m.pix_key ?? "",
-                          m.pix_key_type ?? "",
-                          m.pix_beneficiary ?? ""
-                        ];
-                        return row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
-                      });
-                      const header = "ID,Nome,Email,Status,Formulario,PIX_Chave,PIX_Tipo,PIX_Beneficiario";
-                      const csv = header + "\n" + csvRows.join("\n");
-                      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-                      const url = window.URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.setAttribute('hidden', '');
-                      a.setAttribute('href', url);
-                      a.setAttribute('download', `membros_malta_${new Date().toISOString().split('T')[0]}.csv`);
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-2 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-primary"
-                    title="Exportar Membros e PIXs"
-                  >
-                    <Download className="size-3" /> Exportar
                   </button>
                 </div>
               </div>

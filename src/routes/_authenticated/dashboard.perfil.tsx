@@ -614,6 +614,7 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
         </div>
       </section>
       <AchievementsSection userId={profile.id} />
+      <PostsSection profileId={profile.id} canPost={false} />
     </div>
   );
 }

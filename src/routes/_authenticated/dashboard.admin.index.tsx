@@ -6,6 +6,24 @@ import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileChe
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
   component: AdminPage,
@@ -17,6 +35,10 @@ function AdminPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
+  const [approveTarget, setApproveTarget] = useState<Profile | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<Profile | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<Profile | null>(null);
 
   const membersQuery = useQuery({
     queryKey: ["admin-members"],
@@ -34,6 +56,12 @@ function AdminPage() {
     mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" | "pending" }) => {
       const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
       if (error) throw error;
+      await supabase.from("audit_log").insert({
+        action: `member.${status}`,
+        entity: "profiles",
+        entity_id: id,
+        metadata: {},
+      });
     },
     onSuccess: (_d, v) => {
       toast.success(
@@ -49,6 +77,12 @@ function AdminPage() {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("profiles").delete().eq("id", id);
       if (error) throw error;
+      await supabase.from("audit_log").insert({
+        action: "member.deleted",
+        entity: "profiles",
+        entity_id: id,
+        metadata: {},
+      });
     },
     onSuccess: () => {
       toast.success("Membro removido");
@@ -250,10 +284,7 @@ function AdminPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {p.status !== "approved" && (
                     <button
-                      onClick={() => {
-                        if (confirm(`Aprovar ${p.first_name ?? p.email}?`))
-                          decide.mutate({ id: p.id, status: "approved" });
-                      }}
+                      onClick={() => setApproveTarget(p)}
                       disabled={decide.isPending}
                       className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground ring-1 ring-primary/60 transition-colors hover:bg-primary-glow disabled:opacity-60"
                     >
@@ -262,11 +293,7 @@ function AdminPage() {
                   )}
                   {p.status !== "rejected" && (
                     <button
-                      onClick={() => {
-                        const reason = prompt("Motivo da rejeição (opcional):");
-                        if (reason !== null)
-                          decide.mutate({ id: p.id, status: "rejected" });
-                      }}
+                      onClick={() => { setRejectReason(""); setRejectTarget(p); }}
                       disabled={decide.isPending}
                       className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border transition-colors hover:text-destructive"
                     >
@@ -274,9 +301,7 @@ function AdminPage() {
                     </button>
                   )}
                   <button
-                    onClick={() => {
-                      if (confirm(`Remover ${p.first_name ?? p.email} definitivamente?`)) remove.mutate(p.id);
-                    }}
+                    onClick={() => setRemoveTarget(p)}
                     disabled={remove.isPending}
                     className="inline-flex items-center justify-center rounded-md bg-surface-muted p-1.5 text-muted-foreground ring-1 ring-border transition-colors hover:text-destructive"
                     title="Excluir"
@@ -289,6 +314,87 @@ function AdminPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!approveTarget} onOpenChange={(o) => !o && setApproveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aprovar cadastro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {approveTarget ? `${approveTarget.first_name ?? ""} ${approveTarget.last_name ?? ""} (${approveTarget.email}) será marcado como aprovado.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (approveTarget) decide.mutate({ id: approveTarget.id, status: "approved" });
+                setApproveTarget(null);
+              }}
+            >
+              Aprovar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!rejectTarget} onOpenChange={(o) => !o && setRejectTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeitar cadastro</DialogTitle>
+            <DialogDescription>
+              {rejectTarget ? `${rejectTarget.first_name ?? rejectTarget.email}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Motivo da rejeição (opcional)"
+            rows={4}
+            className="w-full rounded-md border border-border bg-surface p-2 text-sm outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/30"
+          />
+          <DialogFooter>
+            <button
+              onClick={() => setRejectTarget(null)}
+              className="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (rejectTarget) decide.mutate({ id: rejectTarget.id, status: "rejected" });
+                setRejectTarget(null);
+              }}
+              className="rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground"
+            >
+              Confirmar rejeição
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir membro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação é irreversível e apaga o perfil de{" "}
+              {removeTarget ? `${removeTarget.first_name ?? removeTarget.email}` : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removeTarget) remove.mutate(removeTarget.id);
+                setRemoveTarget(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -236,17 +236,26 @@ function OwnerAuditoria() {
             Retenção: <b className="text-foreground">7 dias</b>. Logs mais antigos são apagados automaticamente todo dia às 03:00 UTC.
             {ret?.total_rows != null && <span>· {ret.total_rows} evento{ret.total_rows === 1 ? "" : "s"} armazenado{ret.total_rows === 1 ? "" : "s"}</span>}
           </div>
-          <button onClick={exportCSV} className="btn btn-ghost inline-flex items-center gap-1.5 text-xs">
-            <Download className="size-3.5" /> Exportar CSV
+          <button
+            onClick={exportCSV}
+            className="btn btn-ghost inline-flex items-center gap-1.5 text-xs cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-primary/10 hover:text-primary active:scale-95"
+          >
+            <Download className="size-3.5 transition-transform group-hover:-translate-y-0.5" /> Exportar CSV
           </button>
         </div>
         {showWarn && (
           <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-500/10 p-2 text-amber-700 ring-1 ring-amber-500/20 dark:text-amber-400">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            <div>
+            <div className="flex-1">
               <b>Atenção:</b> o log mais antigo tem {Math.floor(Number(ret.oldest_age_days))} dias e será apagado em {Math.ceil(daysLeft!)} dia{Math.ceil(daysLeft!) === 1 ? "" : "s"}.
               Exporte agora se quiser guardar um backup.
             </div>
+            <button
+              onClick={exportCSV}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-amber-600 hover:shadow-md active:scale-95"
+            >
+              <Download className="size-3.5" /> Exportar agora
+            </button>
           </div>
         )}
       </div>

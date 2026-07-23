@@ -196,12 +196,20 @@ function ChatPage() {
   const dmTargetIds = (threadsQ.data ?? []).map((t) => parseDmTargetId(t.title)).filter(Boolean) as string[];
   const sidebarProfilesQ = useProfilesBasic([...(userId ? [userId] : []), ...memberIds, ...dmTargetIds]);
   const selectedThread = selected ? threadsQ.data?.find((t) => t.id === selected) : null;
-  const selectedTargetId = parseDmTargetId(selectedThread?.title);
-  const selectedTargetProfile = selectedTargetId ? sidebarProfilesQ.data?.get(selectedTargetId) : null;
-  const selectedMemberProfile = selectedThread?.member_id ? sidebarProfilesQ.data?.get(selectedThread.member_id) : null;
+  // "Outro lado" da DM = qualquer id que NÃO seja o meu (nem member_id, nem dm:<id>).
+  // Isso corrige o bug em que a header mostrava o próprio nome do usuário (igual IG/Discord: sempre o interlocutor).
+  function otherPartyId(t?: { member_id?: string | null; title?: string | null } | null) {
+    if (!t) return null;
+    const targetId = parseDmTargetId(t.title);
+    if (t.member_id && t.member_id !== userId) return t.member_id;
+    if (targetId && targetId !== userId) return targetId;
+    return t.member_id ?? targetId ?? null;
+  }
+  const selectedOtherId = otherPartyId(selectedThread);
+  const selectedOtherProfile = selectedOtherId ? sidebarProfilesQ.data?.get(selectedOtherId) : null;
   const selectedLabel = selectedThread?.kind === "general"
     ? "Geral"
-    : displayName((!isStaff && selectedTargetProfile) ? selectedTargetProfile : selectedMemberProfile) || "Conversa";
+    : (selectedOtherProfile ? displayName(selectedOtherProfile) : "Conversa");
 
   return (
     <div className="relative flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] gap-4">
@@ -220,21 +228,19 @@ function ChatPage() {
         </div>
         <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]">
           {(threadsQ.data ?? []).map((t) => {
-            const memberProf = t.member_id ? sidebarProfilesQ.data?.get(t.member_id) : null;
-            const dmTargetId = parseDmTargetId(t.title);
-            const targetProf = dmTargetId ? sidebarProfilesQ.data?.get(dmTargetId) : null;
-            const directProf = !isStaff && targetProf ? targetProf : memberProf;
+            const otherId = otherPartyId(t);
+            const directProf = otherId ? sidebarProfilesQ.data?.get(otherId) : null;
             let label = t.title ?? "Conversa";
-            
+
             if (t.kind === "general") {
               label = "Geral";
             } else if (t.kind === "direct") {
               if (directProf) {
                 label = displayName(directProf);
               } else if (!isStaff) {
-                 label = "Suporte Malta";
-              } else if (isStaff && !memberProf && t.member_id) {
-                 label = "Aguardando Contato";
+                label = "Suporte Malta";
+              } else {
+                label = "Aguardando Contato";
               }
             }
 

@@ -483,11 +483,18 @@ function FeedbackButton() {
     setSending(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await (supabase.from("feedback" as any) as any).insert({ user_id: u.user?.id, category: cat, message: msg.trim() });
+      if (!u.user?.id) throw new Error("Sessão expirada. Faça login novamente.");
+      const { error } = await (supabase.from("feedback" as any) as any)
+        .insert({ user_id: u.user.id, category: cat, message: msg.trim() })
+        .select()
+        .single();
       if (error) throw error;
       toast.success("Feedback enviado. Obrigado!");
       setMsg(""); setOpen(false);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      console.error("[feedback] insert error", e);
+      toast.error(e?.message || "Erro ao enviar feedback");
+    }
     finally { setSending(false); }
   }
   return (

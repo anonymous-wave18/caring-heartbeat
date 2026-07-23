@@ -140,10 +140,10 @@ function AdminFormularios() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 sm:flex-wrap">
         {(["submitted", "approved", "rejected", "all"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ring-1 ${
               filter === f ? "bg-primary text-primary-foreground ring-primary" : "bg-surface ring-border hover:bg-surface-muted"
             }`}>
             {f === "submitted" ? "Aguardando" : f === "approved" ? "Aprovados" : f === "rejected" ? "Recusados" : "Todos"}

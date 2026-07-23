@@ -13,13 +13,31 @@ function MasterOverview() {
     queryFn: async () => {
       const { data: orgs } = await supabase.from("organizations" as any).select("*");
       const { count: users } = await supabase.from("profiles").select("*", { count: "exact", head: true });
-      const { data: rev } = await supabase.from("payments").select("amount").eq("status", "approved");
-      
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rev } = await supabase.from("payments")
+        .select("amount_cents,created_at").eq("status", "approved")
+        .gte("created_at", sevenDaysAgo);
+      const weeklyRevenueCents = (rev ?? []).reduce((acc: number, r: any) => acc + Number(r.amount_cents ?? 0), 0);
+
+      let estimatedRevenueCents = 0;
+      let activeSubs = 0;
+      for (const o of (orgs ?? []) as any[]) {
+        if (o.status && o.status !== "active") continue;
+        activeSubs++;
+        if (o.billing_model === "monthly_fixed") {
+          estimatedRevenueCents += Number(o.monthly_fee_cents ?? 0);
+        } else {
+          const pct = Number(o.revshare_percent ?? 20);
+          // extrapola: revshare semanal * ~4.33 = mensal
+          estimatedRevenueCents += Math.round(weeklyRevenueCents * (pct / 100) * 4.33);
+        }
+      }
+
       return {
         orgs: orgs?.length ?? 0,
         totalUsers: users ?? 0,
-        activeSubs: orgs?.length ?? 0,
-        mrr: rev?.reduce((acc, curr) => acc + curr.amount, 0) ?? 0
+        activeSubs,
+        mrr: estimatedRevenueCents / 100,
       };
     }
   });
@@ -30,7 +48,7 @@ function MasterOverview() {
         <StatCard label="Organizações" value={statsQ.data?.orgs ?? 0} icon={Globe} color="text-blue-500" />
         <StatCard label="Usuários Globais" value={statsQ.data?.totalUsers ?? 0} icon={Users} color="text-primary" />
         <StatCard label="Instâncias Ativas" value={statsQ.data?.activeSubs ?? 0} icon={CreditCard} color="text-success" />
-        <StatCard label="MRR Estimado" value={`R$ ${statsQ.data?.mrr ?? 0}`} icon={ArrowUpRight} color="text-amber-500" />
+        <StatCard label="MRR Estimado" value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(statsQ.data?.mrr ?? 0)} icon={ArrowUpRight} color="text-amber-500" />
       </div>
 
       <div className="rounded-xl bg-surface p-6 ring-1 ring-border">
@@ -73,13 +91,21 @@ function MasterOrgRows() {
   return data.map((org: any) => (
     <tr key={org.id} className="hover:bg-surface-muted/30">
       <td className="px-4 py-3 font-medium">{org.name}</td>
-      <td className="px-4 py-3 text-muted-foreground uppercase">{org.plan || "Enterprise"}</td>
+      <td className="px-4 py-3 text-muted-foreground text-xs">
+        {org.billing_model === "monthly_fixed"
+          ? `Mensal fixo · ${new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format((org.monthly_fee_cents ?? 0)/100)}`
+          : `Revshare · ${Number(org.revshare_percent ?? 20)}%/sem`}
+      </td>
       <td className="px-4 py-3 font-mono text-xs">{org.slug}</td>
       <td className="px-4 py-3">
-        <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success ring-1 ring-success/30">Ativo</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+          org.status === "suspended" ? "bg-amber-500/10 text-amber-500 ring-amber-500/30"
+          : org.status === "canceled" ? "bg-destructive/10 text-destructive ring-destructive/30"
+          : "bg-success/10 text-success ring-success/30"
+        }`}>{org.status === "suspended" ? "Suspenso" : org.status === "canceled" ? "Cancelado" : "Ativo"}</span>
       </td>
       <td className="px-4 py-3 text-right">
-        <button className="text-primary hover:underline" onClick={() => navigate({ to: "/dashboard/master/organizations" })}>Configurar</button>
+        <button className="text-primary hover:underline cursor-pointer transition-transform hover:scale-105" onClick={() => navigate({ to: "/dashboard/master/organizations" })}>Configurar</button>
       </td>
     </tr>
   ));

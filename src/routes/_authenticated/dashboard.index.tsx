@@ -28,10 +28,51 @@ function DashboardHome() {
   const profile = profileQuery.data;
 
   if (!profile) return null;
-  if (profile.status === "pending") return <PendingState />;
   if (profile.status === "rejected") return <RejectedState />;
 
+  // Staff (admin/dono/master) bypassam o gate de formulário.
+  // Para membros comuns, exigimos form_status === 'approved' para liberar tudo.
+  const formApproved = profile.form_status === "approved";
+  if (!isStaff && !formApproved) {
+    if (profile.form_status === "submitted") return <PendingState />;
+    if (profile.form_status === "rejected") return <RejectedState />;
+    return <NeedsFormState firstName={profile.first_name} />;
+  }
+
   return <ApprovedHome profile={profile} isStaff={isStaff} userId={user.id} />;
+}
+
+function NeedsFormState({ firstName }: { firstName: string | null }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-medium tracking-tight">
+          Olá{firstName ? <>, <span className="text-primary">{firstName}</span></> : null}.
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Complete seu cadastro para liberar o acesso completo.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card icon={Clock} label="Status" value="Aguardando formulário" />
+        <Card icon={FileText} label="Formulário" value="Não enviado" />
+        <Card icon={CreditCard} label="Pagamento semanal" value="Bloqueado" />
+      </div>
+
+      <ActionCard
+        to="/dashboard/formulario"
+        icon={FileText}
+        title="Preencha seu formulário"
+        desc="Assim que for aprovado, você libera pagamentos, chat completo e demais recursos."
+      />
+
+      <div className="rounded-xl bg-surface p-6 ring-1 ring-border text-sm text-muted-foreground">
+        Enquanto o formulário não é enviado e aprovado pela administração, as áreas
+        de pagamentos e chat permanecem bloqueadas.
+      </div>
+    </div>
+  );
 }
 
 function PendingState() {

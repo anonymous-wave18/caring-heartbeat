@@ -74,11 +74,18 @@ function AdminPagamentos() {
 
   const generateAll = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc("generate_weekly_payments_all");
+      const { data, error } = await supabase.rpc("generate_weekly_payments_all");
       if (error) throw error;
+      return (data as number | null) ?? 0;
     },
-    onSuccess: () => { toast.success("Cobranças da semana geradas."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: (n) => {
+      toast.success(`Cobranças geradas para ${n} membro(s) aprovado(s).`);
+      qc.invalidateQueries({ queryKey: ["admin-payments"] });
+    },
+    onError: (e: any) => {
+      console.error("generate_weekly_payments_all failed:", e);
+      toast.error(`Falha: ${e?.message ?? e?.hint ?? "erro desconhecido"}`);
+    },
   });
 
   async function downloadProof(path: string, name: string) {

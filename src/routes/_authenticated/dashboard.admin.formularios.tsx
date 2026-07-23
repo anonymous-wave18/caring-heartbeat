@@ -77,6 +77,17 @@ function AdminFormularios() {
           user_id: args.user_id, 
           role: isStaffCargo ? "admin" : "member" 
         }, { onConflict: "user_id,role" });
+
+        // 6. Gera a cobrança da semana atual para o novo membro e marca o admin recrutador
+        try {
+          await supabase.rpc("ensure_current_payment", { _user_id: args.user_id });
+        } catch (e) {
+          console.warn("ensure_current_payment falhou", e);
+        }
+        await supabase.from("payments")
+          .update({ recruiter_admin_id: meQ.data?.id ?? null })
+          .eq("user_id", args.user_id)
+          .is("recruiter_admin_id", null);
       } else {
         await supabase.from("profiles").update({
           form_status: "rejected",

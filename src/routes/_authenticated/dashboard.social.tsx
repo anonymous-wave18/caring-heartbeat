@@ -203,7 +203,7 @@ function SuggestionRow({ p, onFollow, pending }: { p: any; onFollow: () => void;
   const name = displayName(p);
   return (
     <li className="flex items-center gap-3">
-      <Link to="/dashboard/perfil" search={{ userId: p.id } as any} className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity">
+      <Link to="/dashboard/perfil" search={{ view_id: p.id } as any} className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity">
         <AuthorAvatar path={p.avatar_url} name={name} />
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{name}</div>
@@ -308,7 +308,7 @@ function FeedPost({ post, meId }: { post: any; meId: string | null }) {
   return (
     <article className="rounded-xl bg-surface p-4 ring-1 ring-border space-y-3">
       <header className="flex items-center gap-3">
-        <Link to="/dashboard/perfil" search={{ userId: post.user_id } as any} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link to="/dashboard/perfil" search={{ view_id: post.user_id } as any} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <AuthorAvatar path={author?.avatar_url ?? null} name={authorName} />
           <div>
             <div className="text-sm font-medium">{authorName}</div>

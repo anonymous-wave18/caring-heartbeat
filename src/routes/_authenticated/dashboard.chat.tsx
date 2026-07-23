@@ -140,8 +140,7 @@ function ChatPage() {
 
         const existing = threadsQ.data?.find((t) => {
           if (t.kind !== "direct" || t.member_id !== memberId) return false;
-          if (parseDmTargetId(t.title) === targetId) return true;
-          return !isStaff && targetIsStaff;
+          return parseDmTargetId(t.title) === targetId;
         });
         if (existing) {
           if (existing.title !== title) {

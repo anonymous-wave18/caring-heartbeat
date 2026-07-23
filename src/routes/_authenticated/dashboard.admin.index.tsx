@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { toast } from "sonner";
 import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileCheck, BarChart3 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
 
@@ -15,10 +14,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
 type StatusFilter = "all" | "pending" | "approved" | "rejected";
 
 function AdminPage() {
-  const { user } = Route.useRouteContext();
-  const rolesQ = useRoles(user.id);
-  const { isOwner } = computeRoleFlags(rolesQ.data);
-
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
@@ -28,7 +23,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, user_roles!user_roles_user_id_fkey(role)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Profile[];
@@ -159,21 +154,6 @@ function AdminPage() {
           <h1 className="text-3xl font-medium tracking-tight">Cadastros</h1>
           <p className="mt-1 text-sm text-muted-foreground">Gerencie cadastros, aprovações e membros da Malta.</p>
         </div>
-        {isOwner && (
-        <div className="flex flex-col items-end gap-1 rounded-lg bg-surface p-3 text-[10px] ring-1 ring-border">
-          <div className="font-mono text-muted-foreground uppercase tracking-widest">Informações de Conexão</div>
-          <div className="flex gap-2">
-            <div className="flex flex-col items-end">
-              <span className="text-muted-foreground">Login CLI:</span>
-              <code className="font-mono text-primary font-bold">npx supabase login</code>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-muted-foreground">Link Projeto:</span>
-              <code className="font-mono text-primary font-bold">npx supabase link --project-ref lthxjvqjisjuuetoebrz</code>
-            </div>
-          </div>
-        </div>
-        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

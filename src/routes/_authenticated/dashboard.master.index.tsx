@@ -13,13 +13,31 @@ function MasterOverview() {
     queryFn: async () => {
       const { data: orgs } = await supabase.from("organizations" as any).select("*");
       const { count: users } = await supabase.from("profiles").select("*", { count: "exact", head: true });
-      const { data: rev } = await supabase.from("payments").select("amount").eq("status", "approved");
-      
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: rev } = await supabase.from("payments")
+        .select("amount_cents,created_at").eq("status", "approved")
+        .gte("created_at", sevenDaysAgo);
+      const weeklyRevenueCents = (rev ?? []).reduce((acc: number, r: any) => acc + Number(r.amount_cents ?? 0), 0);
+
+      let estimatedRevenueCents = 0;
+      let activeSubs = 0;
+      for (const o of (orgs ?? []) as any[]) {
+        if (o.status && o.status !== "active") continue;
+        activeSubs++;
+        if (o.billing_model === "monthly_fixed") {
+          estimatedRevenueCents += Number(o.monthly_fee_cents ?? 0);
+        } else {
+          const pct = Number(o.revshare_percent ?? 20);
+          // extrapola: revshare semanal * ~4.33 = mensal
+          estimatedRevenueCents += Math.round(weeklyRevenueCents * (pct / 100) * 4.33);
+        }
+      }
+
       return {
         orgs: orgs?.length ?? 0,
         totalUsers: users ?? 0,
-        activeSubs: orgs?.length ?? 0,
-        mrr: rev?.reduce((acc, curr) => acc + curr.amount, 0) ?? 0
+        activeSubs,
+        mrr: estimatedRevenueCents / 100,
       };
     }
   });
@@ -30,7 +48,7 @@ function MasterOverview() {
         <StatCard label="Organizações" value={statsQ.data?.orgs ?? 0} icon={Globe} color="text-blue-500" />
         <StatCard label="Usuários Globais" value={statsQ.data?.totalUsers ?? 0} icon={Users} color="text-primary" />
         <StatCard label="Instâncias Ativas" value={statsQ.data?.activeSubs ?? 0} icon={CreditCard} color="text-success" />
-        <StatCard label="MRR Estimado" value={`R$ ${statsQ.data?.mrr ?? 0}`} icon={ArrowUpRight} color="text-amber-500" />
+        <StatCard label="MRR Estimado" value={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(statsQ.data?.mrr ?? 0)} icon={ArrowUpRight} color="text-amber-500" />
       </div>
 
       <div className="rounded-xl bg-surface p-6 ring-1 ring-border">

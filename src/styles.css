@@ -134,6 +134,16 @@
   &::-webkit-scrollbar { display: none; width: 0; height: 0; }
 }
 
+/* Impede overflow horizontal global (blurs decorativos, tabelas, etc. não estouram a viewport). */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+#root {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
 /* Scrollbar moderna, fina e integrada aos tokens do tema (sem barras brancas). */
 * {
   scrollbar-width: thin;

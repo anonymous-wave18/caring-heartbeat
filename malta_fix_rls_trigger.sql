@@ -103,6 +103,7 @@ CREATE POLICY "cargos: read authenticated" ON public.cargos
   FOR SELECT TO authenticated USING (true);
 
 -- 6) is_staff helper (usada por outras funções/policies)
+DROP FUNCTION IF EXISTS public.is_staff(uuid) CASCADE;
 CREATE OR REPLACE FUNCTION public.is_staff(_uid uuid)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT public.has_role(_uid, 'owner') OR public.has_role(_uid, 'admin')

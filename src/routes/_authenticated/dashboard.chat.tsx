@@ -86,8 +86,8 @@ function ChatPage() {
   const { isStaff } = computeRoleFlags(rolesQ.data);
 
   const threadsQ = useQuery({
-    queryKey: ["threads", userId],
-    enabled: !!userId,
+    queryKey: ["threads", userId, isStaff],
+    enabled: !!userId && !rolesQ.isLoading,
     queryFn: async () => {
       // For staff: see all threads. For members: see threads they are part of (member_id = userId) or general
       let q = supabase.from("chat_threads").select("*");

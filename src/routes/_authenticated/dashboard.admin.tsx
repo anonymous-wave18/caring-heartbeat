@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, FileText, CreditCard, FolderLock, Megaphone, UserCog, Briefcase, Settings2 } from "lucide-react";
+import { Users, FileText, CreditCard, FolderLock, Megaphone, UserCog, Briefcase, Settings2, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin")({
   ssr: false,
@@ -23,6 +23,7 @@ const TABS = [
   { to: "/dashboard/admin/membros", label: "Membros", icon: UserCog, exact: false },
   { to: "/dashboard/admin/cargos", label: "Cargos", icon: Briefcase, exact: false },
   { to: "/dashboard/admin/form-editor", label: "Editor de Formulário", icon: Settings2, exact: false },
+  { to: "/dashboard/admin/feedback", label: "Feedback", icon: MessageSquare, exact: false },
 ] as const;
 
 function AdminLayout() {

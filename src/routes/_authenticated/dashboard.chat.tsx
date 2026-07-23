@@ -163,7 +163,7 @@ function ChatPage() {
             <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
           </div>
         </div>
-        <ul className="divide-y divide-border overflow-y-auto max-h-[calc(100vh-220px)]">
+        <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]">
           {(threadsQ.data ?? []).map((t) => {
             const memberProf = t.member_id ? sidebarProfilesQ.data?.get(t.member_id) : null;
             let label = t.title ?? "Conversa";
@@ -338,7 +338,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
 
   return (
     <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
         {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m: any) => {
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);

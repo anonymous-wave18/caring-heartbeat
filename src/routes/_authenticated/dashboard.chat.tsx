@@ -157,6 +157,22 @@ function ChatPage() {
           .select()
           .single();
         if (error) {
+          // Já existe (thread criada em outra aba/sessão) — busca e usa.
+          if ((error as any).code === "23505") {
+            const { data: found } = await supabase
+              .from("chat_threads")
+              .select("*")
+              .eq("kind", "direct")
+              .eq("member_id", memberId)
+              .eq("title", title)
+              .maybeSingle();
+            if (found) {
+              qc.invalidateQueries({ queryKey: ["threads"] });
+              setSelected(found.id);
+              navigate({ to: "/dashboard/chat", search: {}, replace: true });
+              return;
+            }
+          }
           console.error("[chat] resolveThread insert error", error);
           toast.error("Não foi possível abrir esta conversa: " + error.message);
           navigate({ to: "/dashboard/chat", search: {}, replace: true });

@@ -28,7 +28,7 @@ function AdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, user_roles!user_roles_user_id_fkey(role)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Profile[];

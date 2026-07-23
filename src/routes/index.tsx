@@ -35,25 +35,25 @@ function Landing() {
 function Nav() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary">
             <div className="size-3 rounded-full bg-background" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">Malta Manager</span>
+          <span className="text-base font-semibold tracking-tight sm:text-lg">Malta Manager</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             to="/auth"
             search={{ mode: "login" }}
-            className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="rounded-md px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:px-3"
           >
             Entrar
           </Link>
           <Link
             to="/auth"
             search={{ mode: "signup" }}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-all hover:bg-primary-glow active:scale-[0.98]"
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground ring-1 ring-primary/60 transition-all hover:bg-primary-glow active:scale-[0.98] sm:px-4"
           >
             Cadastrar
           </Link>
@@ -141,17 +141,17 @@ const benefits = [
 
 function Benefits() {
   return (
-    <section className="border-y border-border bg-surface/40 py-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-16">
-          <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+    <section className="border-y border-border bg-surface/40 py-16 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mb-10 sm:mb-16">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary sm:mb-4">
             Benefícios
           </h2>
-          <p className="text-3xl font-medium tracking-tight md:text-4xl">
+          <p className="text-2xl font-medium tracking-tight sm:text-3xl md:text-4xl">
             Tudo sob controle, em um só lugar.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map((b) => (
             <div
               key={b.title}
@@ -193,11 +193,11 @@ const steps = [
 
 function HowItWorks() {
   return (
-    <section id="como-funciona" className="px-6 py-24">
+    <section id="como-funciona" className="px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-16 lg:grid-cols-2">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
-            <h2 className="mb-12 text-3xl font-medium tracking-tight md:text-4xl">
+            <h2 className="mb-8 text-2xl font-medium tracking-tight sm:mb-12 sm:text-3xl md:text-4xl">
               Processo simplificado
             </h2>
             <div className="space-y-10">
@@ -268,9 +268,9 @@ const faq = [
 
 function FAQ() {
   return (
-    <section className="bg-surface/40 py-24">
-      <div className="mx-auto max-w-3xl px-6">
-        <h2 className="mb-12 text-center text-3xl font-medium tracking-tight md:text-4xl">
+    <section className="bg-surface/40 py-16 sm:py-24">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <h2 className="mb-8 text-center text-2xl font-medium tracking-tight sm:mb-12 sm:text-3xl md:text-4xl">
           Perguntas Frequentes
         </h2>
         <div className="divide-y divide-border">
@@ -293,28 +293,28 @@ function FAQ() {
 
 function FinalCTA() {
   return (
-    <section className="px-6 py-32">
-      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-primary p-12 text-center">
+    <section className="px-4 py-20 sm:px-6 sm:py-32">
+      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl bg-primary p-6 text-center sm:p-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)]" />
-        <div className="relative z-10 space-y-8">
-          <h2 className="text-balance text-4xl font-medium tracking-tight text-primary-foreground md:text-5xl">
+        <div className="relative z-10 space-y-6 sm:space-y-8">
+          <h2 className="text-balance text-3xl font-medium tracking-tight text-primary-foreground sm:text-4xl md:text-5xl">
             Pronto para organizar a Malta?
           </h2>
-          <p className="mx-auto max-w-[44ch] text-pretty text-lg text-primary-foreground/85">
+          <p className="mx-auto max-w-[44ch] text-pretty text-base text-primary-foreground/85 sm:text-lg">
             Junte-se aos membros que já utilizam o Malta Manager diariamente.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="rounded-full bg-background px-8 py-3 font-semibold text-primary transition-transform hover:scale-105"
+              className="rounded-full bg-background px-6 py-3 text-sm font-semibold text-primary transition-transform hover:scale-105 sm:px-8 sm:text-base"
             >
               Cadastrar agora
             </Link>
             <Link
               to="/auth"
               search={{ mode: "login" }}
-              className="rounded-full border border-primary-foreground/30 bg-black/10 px-8 py-3 font-semibold text-primary-foreground transition-colors hover:bg-black/20"
+              className="rounded-full border border-primary-foreground/30 bg-black/10 px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-black/20 sm:px-8 sm:text-base"
             >
               Já sou membro
             </Link>
@@ -327,8 +327,8 @@ function FinalCTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-border py-12">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 md:flex-row">
+    <footer className="border-t border-border py-10 sm:py-12">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:px-6 md:flex-row">
 
         <div className="flex items-center gap-2">
           <div className="flex size-5 items-center justify-center rounded-sm bg-primary">

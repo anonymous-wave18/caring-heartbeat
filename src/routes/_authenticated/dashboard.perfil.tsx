@@ -383,7 +383,10 @@ function AdminPixForm({ profile, onUpdated }: { profile: any; onUpdated: () => v
 function AvatarSection({ profile, isOwner, onUpdated }: { profile: Profile; isOwner: boolean; onUpdated: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const avatarUrl = useAvatarUrl(profile.avatar_url);
+
+  useEffect(() => setAvatarFailed(false), [avatarUrl, profile.avatar_url]);
 
   async function handleFile(file: File) {
     if (!/(png|jpe?g|webp)$/i.test(file.name)) {
@@ -426,8 +429,8 @@ function AvatarSection({ profile, isOwner, onUpdated }: { profile: Profile; isOw
     <section className="rounded-xl bg-surface p-6 ring-1 ring-border">
       <div className="flex flex-wrap items-center gap-6">
         <div className="size-20 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="size-full object-cover" />
+          {avatarUrl && !avatarFailed ? (
+            <img src={avatarUrl} alt="" className="size-full object-cover" onError={() => setAvatarFailed(true)} />
           ) : (
             <div className="flex size-full items-center justify-center text-2xl font-semibold text-muted-foreground">
               {(profile.first_name ?? "?").charAt(0).toUpperCase()}

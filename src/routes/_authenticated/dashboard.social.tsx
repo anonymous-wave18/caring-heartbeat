@@ -191,10 +191,14 @@ function SocialFeed() {
 
 function AuthorAvatar({ path, name }: { path: string | null; name: string }) {
   const url = useAvatarUrl(path ?? null);
+  const [failed, setFailed] = useState(false);
+  useMemo(() => {
+    setFailed(false);
+  }, [url, path]);
   const init = (name.trim()[0] ?? "?").toUpperCase();
   return (
     <div className="size-9 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-xs font-medium">
-      {url ? <img src={url} alt={name} className="h-full w-full object-cover" /> : init}
+      {url && !failed ? <img src={url} alt={name} className="h-full w-full object-cover" onError={() => setFailed(true)} /> : init}
     </div>
   );
 }

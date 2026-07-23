@@ -33,10 +33,31 @@ function useProfilesBasic(ids: string[]) {
     enabled: key.length > 0,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_profiles_basic", { _ids: key });
-      if (error) throw error;
       const map = new Map<string, BasicProfile>();
-      for (const r of (data ?? []) as BasicProfile[]) map.set(r.id, r);
+      // 1) tenta a RPC (rápida, já traz is_staff)
+      const rpc = await supabase.rpc("get_profiles_basic", { _ids: key });
+      if (!rpc.error && rpc.data && rpc.data.length > 0) {
+        for (const r of rpc.data as BasicProfile[]) map.set(r.id, r);
+        return map;
+      }
+      // 2) fallback direto: profiles + user_roles
+      const [{ data: profs }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("id, first_name, last_name, avatar_url, cargo_id").in("id", key),
+        supabase.from("user_roles").select("user_id, role").in("user_id", key),
+      ]);
+      const staffSet = new Set(
+        (roles ?? []).filter((r: any) => r.role === "owner" || r.role === "admin").map((r: any) => r.user_id),
+      );
+      for (const p of profs ?? []) {
+        map.set(p.id, {
+          id: p.id,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          avatar_url: p.avatar_url,
+          cargo_id: (p as any).cargo_id ?? null,
+          is_staff: staffSet.has(p.id),
+        });
+      }
       return map;
     },
   });

@@ -118,7 +118,10 @@ function DashboardLayout() {
   ] : [];
   const nav = [...memberNav, ...adminNav, ...ownerNav, ...masterNav];
 
-  const approved = profile?.status === "approved" || isOwner;
+  // Só libera menu completo para membros que enviaram e tiveram o formulário APROVADO.
+  // Staff (admin) e owner sempre têm acesso independente do próprio formulário.
+  const approvedMember = profile?.form_status === "approved" && profile?.status === "approved";
+  const approved = approvedMember || isStaff || isOwner;
   const initial = (profile?.first_name ?? "?").charAt(0).toUpperCase();
 
   return (

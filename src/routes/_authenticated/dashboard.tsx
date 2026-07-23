@@ -210,7 +210,7 @@ function DashboardLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-auto no-scrollbar px-3 py-4">
           {approved ? (
             <ul className="space-y-1">
               {nav.map((item) => {

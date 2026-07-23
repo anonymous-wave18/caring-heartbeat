@@ -105,7 +105,10 @@ function ChatPage() {
   }, [userId, isStaff, threadsQ.data, qc]);
 
   const { thread_id: threadFromUrl } = Route.useSearch();
-  const [selected, setSelected] = useState<string | null>(threadFromUrl ?? null);
+  // Nunca selecionamos um pseudo-id "dm:..." como thread real — só um UUID válido.
+  const [selected, setSelected] = useState<string | null>(
+    threadFromUrl && !threadFromUrl.startsWith("dm:") ? threadFromUrl : null,
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
@@ -113,24 +116,24 @@ function ChatPage() {
       if (threadFromUrl?.startsWith("dm:")) {
         const memberId = threadFromUrl.split(":")[1];
         if (!memberId) return;
-        
-        // Check if thread exists
-        const existing = threadsQ.data?.find(t => t.kind === "direct" && t.member_id === memberId);
+
+        // Se a thread desse membro já existe, usa; senão tenta criar.
+        const existing = threadsQ.data?.find((t) => t.kind === "direct" && t.member_id === memberId);
         if (existing) {
           setSelected(existing.id);
-        } else if (isStaff) {
-          // Create new direct thread for staff
-          const { data, error } = await supabase.from("chat_threads").insert({
-            kind: "direct",
-            member_id: memberId,
-            title: "Privado"
-          }).select().single();
-          
-          if (!error && data) {
-            qc.invalidateQueries({ queryKey: ["threads"] });
-            setSelected(data.id);
-          }
+          return;
         }
+        const { data, error } = await supabase
+          .from("chat_threads")
+          .insert({ kind: "direct", member_id: memberId, title: "Privado" })
+          .select()
+          .single();
+        if (error) {
+          toast.error("Não foi possível abrir esta conversa.");
+          return;
+        }
+        qc.invalidateQueries({ queryKey: ["threads"] });
+        setSelected(data.id);
       } else if (!selected && threadsQ.data && threadsQ.data.length > 0) {
         setSelected(threadsQ.data[0].id);
       }
@@ -160,7 +163,7 @@ function ChatPage() {
             <button className="md:hidden rounded-md p-1 hover:bg-surface-muted" onClick={() => setSidebarOpen(false)}><X className="size-4" /></button>
           </div>
         </div>
-        <ul className="divide-y divide-border overflow-y-auto max-h-[calc(100vh-220px)]">
+        <ul className="divide-y divide-border overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]">
           {(threadsQ.data ?? []).map((t) => {
             const memberProf = t.member_id ? sidebarProfilesQ.data?.get(t.member_id) : null;
             let label = t.title ?? "Conversa";
@@ -215,7 +218,7 @@ function ChatPage() {
             </button>
           )}
         </div>
-        {selected && userId
+        {selected && !selected.startsWith("dm:") && userId
           ? <ThreadView threadId={selected} userId={userId} />
           : <div className="grid h-full place-items-center text-sm text-muted-foreground">Selecione uma conversa.</div>}
       </div>
@@ -335,7 +338,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
 
   return (
     <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
         {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m: any) => {
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);

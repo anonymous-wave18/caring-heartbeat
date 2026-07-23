@@ -44,88 +44,13 @@ function AdminFormularios() {
 
   const reviewMut = useMutation({
     mutationFn: async (args: { id: string; user_id: string; status: "approved" | "rejected"; notes?: string }) => {
-      // 1. Update form status and get the desired cargo
-      const { data: fdata, error: fErr } = await supabase.from("recruitment_forms").update({
-        status: args.status, 
-        reviewed_at: new Date().toISOString(), 
-        review_notes: args.notes ?? null,
-      }).eq("id", args.id).select("cargo_desejado_id").maybeSingle();
-      
-      if (fErr) throw fErr;
-      if (!fdata) throw new Error("Formulário não encontrado");
-
-      if (args.status === "approved" && fdata.cargo_desejado_id) {
-        // 2. Get form details for syncing
-        const { data: formDetails } = await supabase.from("recruitment_forms").select("*").eq("id", args.id).single();
-        // 3. Get cargo details
-        const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
-
-        // 4. Update profile with info from form
-        const fullName = (formDetails?.full_name || "").trim();
-        const nameParts = fullName.split(/\s+/).filter(Boolean);
-        const firstName = nameParts[0] || null;
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
-
-        // Current profile (para não sobrescrever avatar/nome existentes)
-        const { data: currentProfile } = await supabase
-          .from("profiles").select("avatar_url, first_name, last_name").eq("id", args.user_id).maybeSingle();
-
-        const { error: pErr } = await supabase.from("profiles").update({
-          cargo_id: fdata.cargo_desejado_id,
-          recruited_by: meQ.data?.id ?? null,
-          form_status: "approved",
-          status: "approved",
-          first_name: firstName && !currentProfile?.first_name ? firstName : (currentProfile?.first_name ?? firstName),
-          last_name: lastName && !currentProfile?.last_name ? lastName : (currentProfile?.last_name ?? lastName),
-          avatar_url: currentProfile?.avatar_url || formDetails?.discord_avatar_url || null,
-        }).eq("id", args.user_id);
-        if (pErr) throw pErr;
-
-        // 5. Update user_roles based on slug or default
-        const isStaffCargo = cargoData?.slug?.toLowerCase().includes("rec") || cargoData?.slug?.toLowerCase().includes("admin");
-        
-        await supabase.from("user_roles").upsert({ 
-          user_id: args.user_id, 
-          role: isStaffCargo ? "admin" : "member" 
-        }, { onConflict: "user_id,role" });
-
-        // 6. Gera a cobrança da semana atual para o novo membro e marca o admin recrutador
-        try {
-          await supabase.rpc("ensure_current_payment", { _user_id: args.user_id });
-        } catch (e) {
-          console.warn("ensure_current_payment falhou", e);
-        }
-        await supabase.from("payments")
-          .update({ recruiter_admin_id: meQ.data?.id ?? null })
-          .eq("user_id", args.user_id)
-          .is("recruiter_admin_id", null);
-      } else {
-        await supabase.from("profiles").update({
-          form_status: "rejected",
-          status: "pending"
-        }).eq("id", args.user_id);
-      }
-
-      // 5. Log action with device info
-      await supabase.from("audit_log").insert({
-        actor_id: meQ.data?.id,
-        action: `form.${args.status}`,
-        entity: "recruitment_forms",
-        entity_id: args.id,
-        metadata: { 
-          notes: args.notes,
+      await reviewRecruitmentForm({
+        data: {
+          form_id: args.id,
           user_id: args.user_id,
-          ua: navigator.userAgent,
-          platform: navigator.platform
-        }
-      });
-
-      // 6. Notify user
-      await supabase.from("notifications").insert({
-        user_id: args.user_id, type: "form",
-        title: args.status === "approved" ? "Formulário aprovado!" : "Formulário recusado",
-        body: args.status === "approved" ? "Você agora tem acesso completo ao painel." : (args.notes ?? "Sem observações"),
-        link: "/dashboard/formulario",
+          status: args.status,
+          notes: args.notes,
+        },
       });
     },
     onSuccess: (_d, v) => {

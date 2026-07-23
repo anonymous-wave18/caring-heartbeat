@@ -669,6 +669,7 @@ function Field({
 
 function PublicProfileView({ profile, currentUserId }: { profile: Profile; currentUserId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const followingQ = useQuery({
     queryKey: ["is-following", currentUserId, profile.id],
     queryFn: async () => {
@@ -723,10 +724,30 @@ function PublicProfileView({ profile, currentUserId }: { profile: Profile; curre
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Papel do usuário atual e do alvo — pra decidir quando exibir o botão DM.
+  const myRolesQ = useQuery({
+    queryKey: ["my-roles", currentUserId],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", currentUserId);
+      return new Set((data ?? []).map((r: any) => r.role));
+    },
+  });
+  const targetRolesQ = useQuery({
+    queryKey: ["target-roles", profile.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", profile.id);
+      return new Set((data ?? []).map((r: any) => r.role));
+    },
+  });
+  const iAmStaff = !!(myRolesQ.data && (myRolesQ.data.has("owner") || myRolesQ.data.has("admin")));
+  const targetIsStaff = !!(targetRolesQ.data && (targetRolesQ.data.has("owner") || targetRolesQ.data.has("admin")));
+  // Staff-staff DM não existe no modelo atual (RLS só aceita member_id do próprio membro).
+  const canDM = !(iAmStaff && targetIsStaff) && profile.id !== currentUserId;
+
   const startDMMut = useMutation({
     mutationFn: async () => {
-      window.location.href = `/dashboard/chat?thread_id=dm:${profile.id}`;
-    }
+      navigate({ to: "/dashboard/chat", search: { thread_id: `dm:${profile.id}` } });
+    },
   });
 
   const daysInOrg = Math.max(

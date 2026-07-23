@@ -31,17 +31,17 @@ function AdminLayout() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-medium tracking-tight">Administração</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Gerenciamento completo da Malta.</p>
+        <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">Administração</h1>
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">Gerenciamento completo da Malta.</p>
       </div>
-      <div className="flex flex-wrap gap-1 rounded-lg bg-surface p-1 ring-1 ring-border">
+      <div className="-mx-1 flex gap-1 overflow-x-auto no-scrollbar rounded-lg bg-surface p-1 ring-1 ring-border sm:mx-0 sm:flex-wrap">
         {TABS.map((t) => {
           const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
             <Link
               key={t.to}
               to={t.to}
-              className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >

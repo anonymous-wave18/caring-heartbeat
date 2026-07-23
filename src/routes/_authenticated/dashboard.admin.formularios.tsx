@@ -288,14 +288,41 @@ function FormDetail({ form, onClose, onApprove, onReject }: {
                   <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary ring-1 ring-primary/30">{(d as any).kind ?? "other"}</span>
                   {d.file_name}
                 </span>
-                <button onClick={() => download(d.file_path, d.file_name)} className="inline-flex items-center gap-1 text-primary hover:underline">
-                  <Download className="size-3.5" /> baixar
-                </button>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => openPreview(d.file_path, d.file_name)} className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <Eye className="size-3.5" /> ver
+                  </button>
+                  <button onClick={() => download(d.file_path, d.file_name)} className="inline-flex items-center gap-1 text-primary hover:underline">
+                    <Download className="size-3.5" /> baixar
+                  </button>
+                </div>
               </li>
             ))}
             {docsQ.data && docsQ.data.length === 0 && <li className="p-3 text-sm text-muted-foreground">Nenhum documento.</li>}
           </ul>
         </div>
+        {preview && (
+          <div className="fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4" onClick={() => setPreview(null)}>
+            <div className="w-full max-w-3xl rounded-lg bg-card p-3 ring-1 ring-border max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between pb-2">
+                <div className="truncate text-sm font-medium">{preview.name}</div>
+                <button onClick={() => setPreview(null)} className="p-1 rounded hover:bg-surface-muted"><X className="size-4" /></button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-auto grid place-items-center bg-black/40 rounded">
+                {preview.type === "image" ? (
+                  <img src={preview.url} alt={preview.name} className="max-h-full max-w-full object-contain" />
+                ) : preview.type === "pdf" ? (
+                  <iframe src={preview.url} title={preview.name} className="h-[75vh] w-full bg-white rounded" />
+                ) : (
+                  <div className="p-6 text-sm text-muted-foreground">
+                    Pré-visualização não disponível para este tipo.
+                    <a href={preview.url} target="_blank" rel="noreferrer" className="ml-2 text-primary hover:underline">Abrir em nova aba</a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mt-4 space-y-2">
           <textarea rows={2} placeholder="Observações (obrigatório para recusar)"
             value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />

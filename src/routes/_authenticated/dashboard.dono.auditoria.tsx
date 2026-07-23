@@ -80,11 +80,15 @@ const ACTION_MAP: Record<string, ActionMeta> = {
 };
 
 function metaFor(action: string): ActionMeta {
-  return ACTION_MAP[action] ?? {
-    label: action,
+  if (ACTION_MAP[action]) return ACTION_MAP[action];
+  const human = action
+    .replace(/[._]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return {
+    label: human,
     icon: Activity,
     tone: "neutral",
-    describe: (_l, a) => `${a} executou ${action}.`,
+    describe: (_l, a) => `${a} realizou "${human}".`,
   };
 }
 

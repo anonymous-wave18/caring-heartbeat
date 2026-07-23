@@ -91,13 +91,21 @@ function MasterOrgRows() {
   return data.map((org: any) => (
     <tr key={org.id} className="hover:bg-surface-muted/30">
       <td className="px-4 py-3 font-medium">{org.name}</td>
-      <td className="px-4 py-3 text-muted-foreground uppercase">{org.plan || "Enterprise"}</td>
+      <td className="px-4 py-3 text-muted-foreground text-xs">
+        {org.billing_model === "monthly_fixed"
+          ? `Mensal fixo · ${new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format((org.monthly_fee_cents ?? 0)/100)}`
+          : `Revshare · ${Number(org.revshare_percent ?? 20)}%/sem`}
+      </td>
       <td className="px-4 py-3 font-mono text-xs">{org.slug}</td>
       <td className="px-4 py-3">
-        <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success ring-1 ring-success/30">Ativo</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+          org.status === "suspended" ? "bg-amber-500/10 text-amber-500 ring-amber-500/30"
+          : org.status === "canceled" ? "bg-destructive/10 text-destructive ring-destructive/30"
+          : "bg-success/10 text-success ring-success/30"
+        }`}>{org.status === "suspended" ? "Suspenso" : org.status === "canceled" ? "Cancelado" : "Ativo"}</span>
       </td>
       <td className="px-4 py-3 text-right">
-        <button className="text-primary hover:underline" onClick={() => navigate({ to: "/dashboard/master/organizations" })}>Configurar</button>
+        <button className="text-primary hover:underline cursor-pointer transition-transform hover:scale-105" onClick={() => navigate({ to: "/dashboard/master/organizations" })}>Configurar</button>
       </td>
     </tr>
   ));

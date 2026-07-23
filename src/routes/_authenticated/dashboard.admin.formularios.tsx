@@ -50,21 +50,28 @@ function AdminFormularios() {
         const { data: cargoData } = await supabase.from("cargos").select("*").eq("id", fdata.cargo_desejado_id).maybeSingle();
 
         // 4. Update profile with info from form
-        const fullName = formDetails?.full_name || "";
-        const nameParts = fullName.split(" ");
+        const fullName = (formDetails?.full_name || "").trim();
+        const nameParts = fullName.split(/\s+/).filter(Boolean);
         const firstName = nameParts[0] || null;
-        const lastName = nameParts.slice(1).join(" ") || null;
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
 
-        const { error: pErr } = await supabase.from("profiles").update({
+        // Current profile (para não sobrescrever avatar/nome existentes)
+        const { data: currentProfile } = await supabase
+          .from("profiles").select("avatar_url, first_name, last_name").eq("id", args.user_id).maybeSingle();
+
+        const update: Record<string, any> = {
           cargo_id: fdata.cargo_desejado_id,
           recruited_by: meQ.data?.id ?? null,
           form_status: "approved",
           status: "approved",
-          first_name: firstName,
-          last_name: lastName,
-          avatar_url: formDetails?.discord_avatar_url || null,
-          pix_key: formDetails?.bank_name || null,
-        }).eq("id", args.user_id);
+        };
+        if (firstName && !currentProfile?.first_name) update.first_name = firstName;
+        if (lastName && !currentProfile?.last_name) update.last_name = lastName;
+        if (formDetails?.discord_avatar_url && !currentProfile?.avatar_url) {
+          update.avatar_url = formDetails.discord_avatar_url;
+        }
+
+        const { error: pErr } = await supabase.from("profiles").update(update).eq("id", args.user_id);
         if (pErr) throw pErr;
 
         // 5. Update user_roles based on slug or default

@@ -229,7 +229,7 @@ function ChatPage() {
     : (selectedOtherProfile ? displayName(selectedOtherProfile) : "Conversa");
 
   return (
-    <div className="relative flex h-[calc(100dvh-100px)] md:h-[calc(100dvh-160px)] gap-3 sm:gap-4">
+    <div className="relative flex h-[calc(100dvh-140px)] md:h-[calc(100dvh-160px)] min-h-0 gap-3 sm:gap-4">
       {/* Sidebar */}
       <aside className={`
         ${sidebarOpen ? "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs translate-x-0" : "fixed inset-y-0 left-0 z-40 w-[80vw] max-w-xs -translate-x-full"}
@@ -285,7 +285,7 @@ function ChatPage() {
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main */}
-      <div className="flex-1 min-w-0 rounded-lg bg-surface ring-1 ring-border overflow-hidden flex flex-col">
+      <div className="flex-1 min-w-0 min-h-0 rounded-lg bg-surface ring-1 ring-border overflow-hidden flex flex-col">
         <div className="flex items-center gap-2 border-b border-border px-3 py-2 md:hidden">
           <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSidebarOpen(true)}>
             <Menu className="size-4" />
@@ -426,8 +426,8 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
+    <div className="flex h-full min-h-0 flex-col">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-3 sm:p-4 space-y-3">
         {msgsQ.isLoading ? <Loader2 className="size-5 animate-spin" /> : (msgsQ.data ?? []).map((m: any) => {
           const isMe = m.sender_id === userId;
           const p = profsQ.data?.get(m.sender_id);

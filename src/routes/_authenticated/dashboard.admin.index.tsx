@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { toast } from "sonner";
 import { Check, X, Search, Trash2, Loader2, Download, TrendingUp, Users, FileCheck, BarChart3 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "./dashboard";
 
@@ -15,10 +14,6 @@ export const Route = createFileRoute("/_authenticated/dashboard/admin/")({
 type StatusFilter = "all" | "pending" | "approved" | "rejected";
 
 function AdminPage() {
-  const { user } = Route.useRouteContext();
-  const rolesQ = useRoles(user.id);
-  const { isOwner } = computeRoleFlags(rolesQ.data);
-
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");

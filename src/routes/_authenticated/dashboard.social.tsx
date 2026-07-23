@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Heart, MessageCircle, Send, Loader2, UserPlus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,9 +192,7 @@ function SocialFeed() {
 function AuthorAvatar({ path, name }: { path: string | null; name: string }) {
   const url = useAvatarUrl(path ?? null);
   const [failed, setFailed] = useState(false);
-  useMemo(() => {
-    setFailed(false);
-  }, [url, path]);
+  useEffect(() => setFailed(false), [url, path]);
   const init = (name.trim()[0] ?? "?").toUpperCase();
   return (
     <div className="size-9 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-xs font-medium">

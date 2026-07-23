@@ -231,6 +231,7 @@ function ChatPage() {
 }
 
 function ThreadView({ threadId, userId }: { threadId: string; userId: string }) {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const msgsQ = useQuery({
     queryKey: ["messages", threadId],
@@ -352,7 +353,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
             <SwipeableRow key={m.id} onSwipeReply={() => setReplyingTo(m)}>
               <div className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}>
                 {!isMe && (
-                  <button onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}
+                  <button onClick={() => navigate({ to: "/dashboard/perfil", search: { view_id: m.sender_id } })}
                     className="size-8 shrink-0 overflow-hidden rounded-full bg-surface-muted ring-1 ring-border grid place-items-center text-[11px] font-medium text-muted-foreground hover:ring-primary/50 transition-all">
                     <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
                   </button>
@@ -361,7 +362,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   <div className={`rounded-2xl px-3 py-2 text-sm shadow-sm ${isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-surface-muted text-foreground rounded-bl-sm"}`}>
                     {!isMe && (
                       <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium">
-                        <span className="text-foreground/80 hover:text-primary cursor-pointer" onClick={() => { window.location.href = `/dashboard/perfil?view_id=${m.sender_id}`; }}>{displayName(p)}</span>
+                        <span className="text-foreground/80 hover:text-primary cursor-pointer" onClick={() => navigate({ to: "/dashboard/perfil", search: { view_id: m.sender_id } })}>{displayName(p)}</span>
                         {p?.is_staff && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold text-primary ring-1 ring-primary/30">
                             <Shield className="size-2.5" /> ADM
@@ -398,7 +399,7 @@ function ThreadView({ threadId, userId }: { threadId: string; userId: string }) 
                   )}
                 </div>
                 {isMe && (
-                  <button onClick={() => window.location.href = `/dashboard/perfil`}
+                  <button onClick={() => navigate({ to: "/dashboard/perfil", search: {} })}
                     className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/20 ring-1 ring-primary/40 grid place-items-center text-[11px] font-medium text-primary">
                     <AvatarImage path={p?.avatar_url} fallback={initials(p)} />
                   </button>

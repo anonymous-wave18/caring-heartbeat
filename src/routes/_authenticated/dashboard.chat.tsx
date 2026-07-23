@@ -105,7 +105,10 @@ function ChatPage() {
   }, [userId, isStaff, threadsQ.data, qc]);
 
   const { thread_id: threadFromUrl } = Route.useSearch();
-  const [selected, setSelected] = useState<string | null>(threadFromUrl ?? null);
+  // Nunca selecionamos um pseudo-id "dm:..." como thread real — só um UUID válido.
+  const [selected, setSelected] = useState<string | null>(
+    threadFromUrl && !threadFromUrl.startsWith("dm:") ? threadFromUrl : null,
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
@@ -113,24 +116,24 @@ function ChatPage() {
       if (threadFromUrl?.startsWith("dm:")) {
         const memberId = threadFromUrl.split(":")[1];
         if (!memberId) return;
-        
-        // Check if thread exists
-        const existing = threadsQ.data?.find(t => t.kind === "direct" && t.member_id === memberId);
+
+        // Se a thread desse membro já existe, usa; senão tenta criar.
+        const existing = threadsQ.data?.find((t) => t.kind === "direct" && t.member_id === memberId);
         if (existing) {
           setSelected(existing.id);
-        } else if (isStaff) {
-          // Create new direct thread for staff
-          const { data, error } = await supabase.from("chat_threads").insert({
-            kind: "direct",
-            member_id: memberId,
-            title: "Privado"
-          }).select().single();
-          
-          if (!error && data) {
-            qc.invalidateQueries({ queryKey: ["threads"] });
-            setSelected(data.id);
-          }
+          return;
         }
+        const { data, error } = await supabase
+          .from("chat_threads")
+          .insert({ kind: "direct", member_id: memberId, title: "Privado" })
+          .select()
+          .single();
+        if (error) {
+          toast.error("Não foi possível abrir esta conversa.");
+          return;
+        }
+        qc.invalidateQueries({ queryKey: ["threads"] });
+        setSelected(data.id);
       } else if (!selected && threadsQ.data && threadsQ.data.length > 0) {
         setSelected(threadsQ.data[0].id);
       }

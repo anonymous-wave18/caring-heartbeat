@@ -133,3 +133,15 @@
   -ms-overflow-style: none;
   &::-webkit-scrollbar { display: none; width: 0; height: 0; }
 }
+
+/* Esconde a scrollbar global mantendo o scroll funcional. */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

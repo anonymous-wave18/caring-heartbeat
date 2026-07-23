@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Upload, KeyRound, Save, Trophy, Star, ShieldCheck, Zap } from "lucide-react";
+import { Loader2, Upload, KeyRound, Save, Trophy, Send, Trash2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
@@ -53,8 +53,10 @@ function PerfilPage() {
       <AvatarSection profile={profile} isOwner={isViewingSelf} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", viewId] })} />
       {isViewingSelf ? (
         <>
+          <SocialStatsBar profileId={user.id} />
           <ProfileForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />
           {isStaff && <AdminPixForm profile={profile} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] })} />}
+          <PostsSection profileId={user.id} canPost={true} />
           <AchievementsSection userId={user.id} />
           <PasswordForm />
         </>
@@ -62,6 +64,120 @@ function PerfilPage() {
         <PublicProfileView profile={profile} currentUserId={user.id} />
       )}
     </div>
+  );
+}
+
+function SocialStatsBar({ profileId }: { profileId: string }) {
+  const statsQ = useQuery({
+    queryKey: ["social-stats", profileId],
+    queryFn: async () => {
+      const [followers, following, achievements] = await Promise.all([
+        (supabase.from("user_follows" as any) as any).select("*", { count: "exact", head: true }).eq("following_id", profileId),
+        (supabase.from("user_follows" as any) as any).select("*", { count: "exact", head: true }).eq("follower_id", profileId),
+        (supabase.from("user_achievements" as any) as any).select("*", { count: "exact", head: true }).eq("user_id", profileId),
+      ]);
+      return {
+        followers: followers.count ?? 0,
+        following: following.count ?? 0,
+        achievements: achievements.count ?? 0,
+      };
+    },
+  });
+  return (
+    <div className="grid grid-cols-3 gap-3 rounded-xl bg-surface p-4 ring-1 ring-border text-center">
+      <div>
+        <div className="text-2xl font-semibold">{statsQ.data?.followers ?? 0}</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Seguidores</div>
+      </div>
+      <div>
+        <div className="text-2xl font-semibold">{statsQ.data?.following ?? 0}</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Seguindo</div>
+      </div>
+      <div>
+        <div className="text-2xl font-semibold">{statsQ.data?.achievements ?? 0}</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Conquistas</div>
+      </div>
+    </div>
+  );
+}
+
+function PostsSection({ profileId, canPost }: { profileId: string; canPost: boolean }) {
+  const qc = useQueryClient();
+  const [body, setBody] = useState("");
+  const postsQ = useQuery({
+    queryKey: ["profile-posts", profileId],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("profile_posts" as any) as any)
+        .select("id, body, created_at, user_id")
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) return [];
+      return data ?? [];
+    },
+  });
+  const createMut = useMutation({
+    mutationFn: async () => {
+      const text = body.trim();
+      if (!text) throw new Error("Escreva algo antes de publicar.");
+      if (text.length > 500) throw new Error("Máximo 500 caracteres.");
+      const { error } = await (supabase.from("profile_posts" as any) as any).insert({ user_id: profileId, body: text });
+      if (error) throw error;
+    },
+    onSuccess: () => { setBody(""); toast.success("Publicado!"); qc.invalidateQueries({ queryKey: ["profile-posts", profileId] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const delMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("profile_posts" as any) as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile-posts", profileId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="rounded-xl bg-surface p-6 ring-1 ring-border space-y-4">
+      <h2 className="font-medium">Publicações</h2>
+      {canPost && (
+        <form onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }} className="space-y-2">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder="O que você quer compartilhar?"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60 focus:ring-2 ring-primary/30"
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">{body.length}/500</span>
+            <button type="submit" disabled={createMut.isPending || !body.trim()}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50">
+              {createMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              Publicar
+            </button>
+          </div>
+        </form>
+      )}
+      <div className="space-y-2">
+        {(postsQ.data ?? []).length === 0 && (
+          <div className="text-sm text-muted-foreground text-center py-6">Nenhuma publicação ainda.</div>
+        )}
+        {(postsQ.data ?? []).map((p: any) => (
+          <div key={p.id} className="rounded-lg bg-surface-muted/40 p-3 ring-1 ring-border">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm whitespace-pre-wrap break-words flex-1">{p.body}</p>
+              {canPost && (
+                <button onClick={() => delMut.mutate(p.id)} className="text-muted-foreground hover:text-destructive p-1" title="Apagar">
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="mt-1 text-[11px] text-muted-foreground">{new Date(p.created_at).toLocaleString("pt-BR")}</div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

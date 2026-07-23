@@ -180,6 +180,13 @@ function ChatPage() {
   const memberIds = (threadsQ.data ?? []).map((t) => t.member_id).filter(Boolean) as string[];
   const dmTargetIds = (threadsQ.data ?? []).map((t) => parseDmTargetId(t.title)).filter(Boolean) as string[];
   const sidebarProfilesQ = useProfilesBasic([...(userId ? [userId] : []), ...memberIds, ...dmTargetIds]);
+  const selectedThread = selected ? threadsQ.data?.find((t) => t.id === selected) : null;
+  const selectedTargetId = parseDmTargetId(selectedThread?.title);
+  const selectedTargetProfile = selectedTargetId ? sidebarProfilesQ.data?.get(selectedTargetId) : null;
+  const selectedMemberProfile = selectedThread?.member_id ? sidebarProfilesQ.data?.get(selectedThread.member_id) : null;
+  const selectedLabel = selectedThread?.kind === "general"
+    ? "Geral"
+    : displayName((!isStaff && selectedTargetProfile) ? selectedTargetProfile : selectedMemberProfile) || "Conversa";
 
   return (
     <div className="relative flex h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] gap-4">
@@ -246,7 +253,7 @@ function ChatPage() {
             <Menu className="size-4" />
           </button>
           <span className="text-sm font-medium truncate flex-1">
-            {selected ? (threadsQ.data?.find((t) => t.id === selected)?.title === 'Suporte' && !isStaff ? 'Suporte' : (threadsQ.data?.find((t) => t.id === selected)?.title ?? "Conversa")) : "Conversas"}
+            {selected ? selectedLabel : "Conversas"}
           </span>
           {selected && (
             <button className="rounded-md p-1.5 hover:bg-surface-muted" onClick={() => setSelected(null)}>
@@ -501,8 +508,12 @@ function SwipeableRow({ children, onSwipeReply }: { children: ReactNode; onSwipe
 
 function AvatarImage({ path, fallback }: { path: string | null | undefined; fallback: string }) {
   const url = useAvatarUrl(path ?? null);
-  if (url) return <img src={url} alt="" className="size-full object-cover" />;
-  if (path && (path.startsWith("http") || path.startsWith("blob:"))) return <img src={path} alt="" className="size-full object-cover" />;
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [url, path]);
+  if (url && !failed) return <img src={url} alt="" className="size-full object-cover" onError={() => setFailed(true)} />;
+  if (path && !failed && (path.startsWith("http") || path.startsWith("blob:"))) {
+    return <img src={path} alt="" className="size-full object-cover" onError={() => setFailed(true)} />;
+  }
   return <>{fallback}</>;
 }
 

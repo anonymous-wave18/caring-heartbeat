@@ -136,6 +136,7 @@ function AdminMembros() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             );
           })}

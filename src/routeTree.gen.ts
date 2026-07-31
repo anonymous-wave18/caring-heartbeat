@@ -32,6 +32,7 @@ import { Route as AuthenticatedDashboardMasterSecurityRouteImport } from './rout
 import { Route as AuthenticatedDashboardMasterOrganizationsRouteImport } from './routes/_authenticated/dashboard.master.organizations'
 import { Route as AuthenticatedDashboardDonoRepassesRouteImport } from './routes/_authenticated/dashboard.dono.repasses'
 import { Route as AuthenticatedDashboardDonoPermissoesRouteImport } from './routes/_authenticated/dashboard.dono.permissoes'
+import { Route as AuthenticatedDashboardDonoDiscordBotRouteImport } from './routes/_authenticated/dashboard.dono.discord-bot'
 import { Route as AuthenticatedDashboardDonoDatabaseRouteImport } from './routes/_authenticated/dashboard.dono.database'
 import { Route as AuthenticatedDashboardDonoAuditoriaRouteImport } from './routes/_authenticated/dashboard.dono.auditoria'
 import { Route as AuthenticatedDashboardAdminPagamentosRouteImport } from './routes/_authenticated/dashboard.admin.pagamentos'
@@ -176,6 +177,12 @@ const AuthenticatedDashboardDonoPermissoesRoute =
     path: '/permissoes',
     getParentRoute: () => AuthenticatedDashboardDonoRoute,
   } as any)
+const AuthenticatedDashboardDonoDiscordBotRoute =
+  AuthenticatedDashboardDonoDiscordBotRouteImport.update({
+    id: '/discord-bot',
+    path: '/discord-bot',
+    getParentRoute: () => AuthenticatedDashboardDonoRoute,
+  } as any)
 const AuthenticatedDashboardDonoDatabaseRoute =
   AuthenticatedDashboardDonoDatabaseRouteImport.update({
     id: '/database',
@@ -261,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
   '/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
   '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/dashboard/dono/discord-bot': typeof AuthenticatedDashboardDonoDiscordBotRoute
   '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
@@ -291,6 +299,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
   '/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
   '/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/dashboard/dono/discord-bot': typeof AuthenticatedDashboardDonoDiscordBotRoute
   '/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin/pagamentos': typeof AuthenticatedDashboardAdminPagamentosRoute
   '/_authenticated/dashboard/dono/auditoria': typeof AuthenticatedDashboardDonoAuditoriaRoute
   '/_authenticated/dashboard/dono/database': typeof AuthenticatedDashboardDonoDatabaseRoute
+  '/_authenticated/dashboard/dono/discord-bot': typeof AuthenticatedDashboardDonoDiscordBotRoute
   '/_authenticated/dashboard/dono/permissoes': typeof AuthenticatedDashboardDonoPermissoesRoute
   '/_authenticated/dashboard/dono/repasses': typeof AuthenticatedDashboardDonoRepassesRoute
   '/_authenticated/dashboard/master/organizations': typeof AuthenticatedDashboardMasterOrganizationsRoute
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/pagamentos'
     | '/dashboard/dono/auditoria'
     | '/dashboard/dono/database'
+    | '/dashboard/dono/discord-bot'
     | '/dashboard/dono/permissoes'
     | '/dashboard/dono/repasses'
     | '/dashboard/master/organizations'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin/pagamentos'
     | '/dashboard/dono/auditoria'
     | '/dashboard/dono/database'
+    | '/dashboard/dono/discord-bot'
     | '/dashboard/dono/permissoes'
     | '/dashboard/dono/repasses'
     | '/dashboard/master/organizations'
@@ -428,6 +440,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin/pagamentos'
     | '/_authenticated/dashboard/dono/auditoria'
     | '/_authenticated/dashboard/dono/database'
+    | '/_authenticated/dashboard/dono/discord-bot'
     | '/_authenticated/dashboard/dono/permissoes'
     | '/_authenticated/dashboard/dono/repasses'
     | '/_authenticated/dashboard/master/organizations'
@@ -608,6 +621,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDonoPermissoesRouteImport
       parentRoute: typeof AuthenticatedDashboardDonoRoute
     }
+    '/_authenticated/dashboard/dono/discord-bot': {
+      id: '/_authenticated/dashboard/dono/discord-bot'
+      path: '/discord-bot'
+      fullPath: '/dashboard/dono/discord-bot'
+      preLoaderRoute: typeof AuthenticatedDashboardDonoDiscordBotRouteImport
+      parentRoute: typeof AuthenticatedDashboardDonoRoute
+    }
     '/_authenticated/dashboard/dono/database': {
       id: '/_authenticated/dashboard/dono/database'
       path: '/database'
@@ -723,6 +743,7 @@ const AuthenticatedDashboardAdminRouteWithChildren =
 interface AuthenticatedDashboardDonoRouteChildren {
   AuthenticatedDashboardDonoAuditoriaRoute: typeof AuthenticatedDashboardDonoAuditoriaRoute
   AuthenticatedDashboardDonoDatabaseRoute: typeof AuthenticatedDashboardDonoDatabaseRoute
+  AuthenticatedDashboardDonoDiscordBotRoute: typeof AuthenticatedDashboardDonoDiscordBotRoute
   AuthenticatedDashboardDonoPermissoesRoute: typeof AuthenticatedDashboardDonoPermissoesRoute
   AuthenticatedDashboardDonoRepassesRoute: typeof AuthenticatedDashboardDonoRepassesRoute
   AuthenticatedDashboardDonoIndexRoute: typeof AuthenticatedDashboardDonoIndexRoute
@@ -734,6 +755,8 @@ const AuthenticatedDashboardDonoRouteChildren: AuthenticatedDashboardDonoRouteCh
       AuthenticatedDashboardDonoAuditoriaRoute,
     AuthenticatedDashboardDonoDatabaseRoute:
       AuthenticatedDashboardDonoDatabaseRoute,
+    AuthenticatedDashboardDonoDiscordBotRoute:
+      AuthenticatedDashboardDonoDiscordBotRoute,
     AuthenticatedDashboardDonoPermissoesRoute:
       AuthenticatedDashboardDonoPermissoesRoute,
     AuthenticatedDashboardDonoRepassesRoute:

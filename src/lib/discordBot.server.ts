@@ -51,13 +51,16 @@ export async function callBot(
   command: BotCommand,
   payload: Record<string, unknown>,
   timeoutMs = 10_000,
-): Promise<{ ok: true; data: any } | { ok: false; error: string }> {
+): Promise<{ ok: true; data: any; latencyMs: number } | { ok: false; error: string; latencyMs: number }> {
+  const startedAt = Date.now();
+  const took = () => Date.now() - startedAt;
   const apiUrl = process.env.DISCORD_BOT_API_URL;
   const secret = process.env.DISCORD_BOT_SHARED_SECRET;
   if (!apiUrl || !secret) {
     return {
       ok: false,
       error: "Bot não configurado no servidor (DISCORD_BOT_API_URL / DISCORD_BOT_SHARED_SECRET).",
+      latencyMs: took(),
     };
   }
 
@@ -68,7 +71,7 @@ export async function callBot(
   try {
     signature = await hmacHex(secret, body);
   } catch {
-    return { ok: false, error: "Falha ao assinar a requisição do bot." };
+    return { ok: false, error: "Falha ao assinar a requisição do bot.", latencyMs: took() };
   }
 
   const ctrl = new AbortController();
@@ -92,14 +95,15 @@ export async function callBot(
     } catch {
       parsed = { raw: text };
     }
-    if (!res.ok) return { ok: false, error: parsed?.error ?? `Bot respondeu ${res.status}` };
-    return { ok: true, data: parsed };
+    if (!res.ok)
+      return { ok: false, error: parsed?.error ?? `Bot respondeu ${res.status}`, latencyMs: took() };
+    return { ok: true, data: parsed, latencyMs: took() };
   } catch (e: any) {
     const msg =
       e?.name === "AbortError"
         ? "Tempo esgotado ao falar com o bot."
         : e?.message ?? "Falha de rede ao falar com o bot.";
-    return { ok: false, error: msg };
+    return { ok: false, error: msg, latencyMs: took() };
   } finally {
     clearTimeout(t);
   }

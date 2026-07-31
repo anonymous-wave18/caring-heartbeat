@@ -7,15 +7,19 @@ Para hospedar **site**, o Discloud identifica a aplicação pelo campo `ID`, que
 ```text
 ID=SEU-SUBDOMINIO
 TYPE=site
-MAIN=.output/server/index.mjs
+MAIN=server.mjs
 RAM=512
 VERSION=latest
 AUTORESTART=true
 ```
 
-Troque `SEU-SUBDOMINIO` pelo subdomínio real (só a parte antes de `.discloud.app`).
-Salve em UTF-8 sem BOM, uma chave por linha, sem espaços em volta do `=` e **sem
-chaves vazias** (`AVATAR=`, `APT=` → omita a linha).
+Troque `SEU-SUBDOMINIO` pelo subdomínio real (só a parte antes de `.discloud.app`) —
+o build aborta se o placeholder continuar aí. Salve em UTF-8 sem BOM, uma chave por
+linha, sem espaços em volta do `=` e **sem chaves vazias** (`AVATAR=`, `APT=` → omita).
+
+`MAIN=server.mjs` é o ponto central da correção do `serve: Permission denied`: o
+arquivo de start fica na **raiz** do zip (nome comum, sem ponto), então o Discloud
+executa `node server.mjs` em vez de tentar o fallback estático `serve`.
 
 ## 1. Build + empacotamento (na sua máquina, não na Lovable)
 ```bash
@@ -23,49 +27,49 @@ npm install
 npm run build:discloud
 ```
 
-O script:
-- força `NITRO_PRESET=node-server` e roda o `vite build`;
-- valida que `.output/server/index.mjs` foi gerado (aborta com mensagem clara se não);
-- monta a pasta **`dist-discloud/`** já com tudo que o Discloud precisa:
-  `.output/`, `discloud.config`, `.env` e um `package.json` de runtime
-  (`start = node .output/server/index.mjs`).
+O script faz tudo:
+- força `NITRO_PRESET=node-server` e roda o build;
+- valida que o servidor foi gerado (aborta com mensagem clara se não);
+- valida o `discloud.config` (`ID` real + `MAIN=server.mjs`);
+- monta `dist-discloud/` com `output/`, `server.mjs`, `package.json`
+  (`start = node server.mjs`), `discloud.config` e `.env`;
+- **sobe o servidor localmente** e confirma que ele responde HTTP;
+- gera o **`malta-discloud.zip`** já pronto para upload.
 
-Nunca use `npm run build` para o Discloud — esse gera `dist/` (alvo Cloudflare) e o
-`MAIN` do `discloud.config` não vai existir.
+Nunca use `npm run build` para o Discloud — esse gera `dist/` (alvo Cloudflare).
 
-## 2. Monte o .zip
-Zipe **o conteúdo de dentro** de `dist-discloud/`, nunca a pasta em si.
+## 2. Suba o zip
+Envie o `malta-discloud.zip` gerado na raiz do projeto. Não precisa compactar nada
+à mão. Se quiser conferir:
 
 ```bash
-cd dist-discloud && rm -f ../malta.zip && zip -r ../malta.zip . && cd ..
-unzip -l malta.zip | head
+unzip -l malta-discloud.zip | head
 ```
 
-No Windows: entre em `dist-discloud`, ative **Exibir → Itens ocultos** (para pegar
-`.output` e `.env`), selecione todos os itens e compacte.
-
-Estrutura correta:
+Estrutura correta (nada dentro de subpasta):
 ```text
-malta.zip
-├── discloud.config
+malta-discloud.zip
+├── server.mjs
 ├── package.json
+├── discloud.config
 ├── .env
-└── .output/
+└── output/
     └── server/
         └── index.mjs
 ```
 
+No log do Discloud, o start certo aparece como `node server.mjs` (ou o boot do
+Nitro). Se aparecer `serve`, o zip enviado é antigo — rode o build de novo.
+
 ## 3. Erros comuns e a causa real
 
-**`O arquivo principal .output/server/index.mjs não foi encontrado dentro do zip`**
-- rodou `npm run build` em vez de `npm run build:discloud`; ou
-- o zip tem uma subpasta na raiz (`malta/discloud.config` em vez de `discloud.config`); ou
-- o compactador pulou `.output`/`.env` por serem itens ocultos.
-
 **`sh: 1: serve: Permission denied`**
-- faltava `package.json` no zip. Sem o script `start`, o Discloud cai no fallback
-  estático `serve`, que não existe no container. O `build:discloud` já grava esse
-  `package.json` dentro de `dist-discloud/` — basta zipar a pasta inteira.
+- o zip não tinha um start explícito na raiz. Agora `MAIN=server.mjs` +
+  `package.json` com `start` resolvem isso; garanta que subiu o zip novo.
+
+**`O arquivo principal ... não foi encontrado dentro do zip`**
+- rodou `npm run build` em vez de `npm run build:discloud`; ou
+- o zip tem subpasta na raiz (`malta/server.mjs` em vez de `server.mjs`).
 
 **`Encontramos um erro dentro do arquivo discloud.config`**
 - falta o `ID`, chave com valor vazio, espaços em volta do `=`, acentos, BOM ou CRLF.
@@ -86,8 +90,7 @@ automaticamente para `TYPE=site`.
 
 ## 6. Checklist antes de subir
 - [ ] `npm run build:discloud` terminou com `[build:discloud] OK`
+- [ ] apareceu `start testado localmente: node server.mjs respondeu HTTP`
 - [ ] nenhum `AVISO: nenhum .env encontrado`
 - [ ] `discloud.config` tem `ID=` com o subdomínio real (não o placeholder)
-- [ ] zip feito de **dentro** de `dist-discloud/`
-- [ ] `unzip -l malta.zip | head` mostra `discloud.config`, `package.json`, `.env` e
-      `.output/server/index.mjs` sem prefixo de pasta
+- [ ] subiu o `malta-discloud.zip` gerado agora (não um zip antigo)

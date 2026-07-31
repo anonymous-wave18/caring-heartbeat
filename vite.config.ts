@@ -14,7 +14,17 @@ export default defineConfig({
   },
   // Fora do build da Lovable (ex.: build local para o Discloud) permite escolher o alvo
   // com NITRO_PRESET=node-server. Dentro da Lovable o preset é sempre Cloudflare.
+  // As pastas de saída são fixadas em .output/ para casar com MAIN do discloud.config.
   ...(process.env.NITRO_PRESET
-    ? { nitro: { preset: process.env.NITRO_PRESET } as const }
+    ? {
+        nitro: {
+          preset: process.env.NITRO_PRESET,
+          output: {
+            dir: ".output",
+            serverDir: ".output/server",
+            publicDir: ".output/public",
+          },
+        } as const,
+      }
     : {}),
 });

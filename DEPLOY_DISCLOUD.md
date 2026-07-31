@@ -90,8 +90,7 @@ automaticamente para `TYPE=site`.
 
 ## 6. Checklist antes de subir
 - [ ] `npm run build:discloud` terminou com `[build:discloud] OK`
+- [ ] apareceu `start testado localmente: node server.mjs respondeu HTTP`
 - [ ] nenhum `AVISO: nenhum .env encontrado`
 - [ ] `discloud.config` tem `ID=` com o subdomínio real (não o placeholder)
-- [ ] zip feito de **dentro** de `dist-discloud/`
-- [ ] `unzip -l malta.zip | head` mostra `discloud.config`, `package.json`, `.env` e
-      `.output/server/index.mjs` sem prefixo de pasta
+- [ ] subiu o `malta-discloud.zip` gerado agora (não um zip antigo)

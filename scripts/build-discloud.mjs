@@ -45,13 +45,13 @@ function step(label, fn) {
 }
 
 // 1) Build com o preset Node (o "npm run build" normal gera dist/, alvo Cloudflare).
-const result = spawnSync("vite", ["build"], {
+const result = spawnSync("npx", ["--no-install", "vite", "build"], {
   stdio: "inherit",
   shell: true,
   env: { ...process.env, NITRO_PRESET: "node-server" },
 });
 
-if (result.error) fail(`nao foi possivel executar "vite build": ${result.error.message}`);
+if (result.error) fail(`nao foi possivel executar "npx vite build": ${result.error.message}`);
 if (result.status !== 0) fail(`"vite build" terminou com codigo ${result.status}. Corrija o erro acima antes de montar o zip.`);
 
 const entryPath = resolve(cwd, BUILD_ENTRY);

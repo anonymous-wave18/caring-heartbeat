@@ -14,94 +14,80 @@ AUTORESTART=true
 ```
 
 Troque `SEU-SUBDOMINIO` pelo subdomínio real (só a parte antes de `.discloud.app`).
+Salve em UTF-8 sem BOM, uma chave por linha, sem espaços em volta do `=` e **sem
+chaves vazias** (`AVATAR=`, `APT=` → omita a linha).
 
-> Erro `Encontramos um erro dentro do arquivo discloud.config` quase sempre é:
-> - falta do campo `ID` (ou uso de `NAME` no lugar dele em `TYPE=site`);
-> - chave declarada com valor vazio (`AVATAR=`, `APT=`) — omita a linha em vez de deixar vazia;
-> - espaços em volta do `=`, acentos, ou arquivo salvo com BOM / final de linha CRLF.
->
-> Salve sempre em UTF-8 sem BOM, uma chave por linha, sem espaços.
-
-> Erro `O arquivo principal .output/server/index.mjs não foi encontrado dentro do zip`
-> significa uma de três coisas: (a) você rodou `npm run build` em vez de
-> `npm run build:discloud` (o build normal sai em `dist/`, não em `.output/`);
-> (b) o zip tem uma subpasta na raiz; (c) o compactador pulou a pasta `.output`
-> por ela começar com ponto e estar no `.gitignore`. Siga os passos abaixo.
-
-## 1. Build local (na sua máquina, não na Lovable)
+## 1. Build + empacotamento (na sua máquina, não na Lovable)
 ```bash
 npm install
 npm run build:discloud
 ```
-O script `build:discloud` funciona igual em Windows, macOS e Linux: ele define
-`NITRO_PRESET=node-server`, roda o `vite build` e **falha com mensagem clara** se
-`.output/server/index.mjs` não tiver sido gerado. Se ele terminar com
-`[build:discloud] OK`, o entry existe de verdade.
+
+O script:
+- força `NITRO_PRESET=node-server` e roda o `vite build`;
+- valida que `.output/server/index.mjs` foi gerado (aborta com mensagem clara se não);
+- monta a pasta **`dist-discloud/`** já com tudo que o Discloud precisa:
+  `.output/`, `discloud.config`, `.env` e um `package.json` de runtime
+  (`start = node .output/server/index.mjs`).
 
 Nunca use `npm run build` para o Discloud — esse gera `dist/` (alvo Cloudflare) e o
 `MAIN` do `discloud.config` não vai existir.
 
-Conferência manual, se quiser:
+## 2. Monte o .zip
+Zipe **o conteúdo de dentro** de `dist-discloud/`, nunca a pasta em si.
+
 ```bash
-ls .output/server/index.mjs
+cd dist-discloud && rm -f ../malta.zip && zip -r ../malta.zip . && cd ..
+unzip -l malta.zip | head
 ```
-No Windows: `dir .output\server\index.mjs`. Se não existir, NÃO monte o zip.
 
-## 2. Monte o .zip para upload
-Inclua APENAS:
-- `.output/`  (build pronto)
-- `discloud.config`
-- `.env`  (com as chaves — o Discloud lê como variáveis de ambiente)
+No Windows: entre em `dist-discloud`, ative **Exibir → Itens ocultos** (para pegar
+`.output` e `.env`), selecione todos os itens e compacte.
 
-NÃO envie: `node_modules`, `src`, `.git`, `dist`.
-
-**A estrutura interna do zip precisa ter esses itens na RAIZ**, assim:
+Estrutura correta:
 ```text
 malta.zip
 ├── discloud.config
+├── package.json
 ├── .env
 └── .output/
     └── server/
         └── index.mjs
 ```
-Se abrir o zip e aparecer `malta/discloud.config`, o Discloud não acha o MAIN. Esse é
-o motivo mais comum do erro.
 
-Confira o conteúdo do zip **antes** de subir:
-```bash
-unzip -l malta.zip | head
-```
-Tem que aparecer `.output/server/index.mjs` — sem nenhum prefixo de pasta na frente.
-No Windows, abra o zip com duplo clique: você deve ver `discloud.config`, `.env` e
-`.output` já no primeiro nível.
+## 3. Erros comuns e a causa real
 
-Comando pronto (Linux/macOS, de dentro da pasta do projeto):
-```bash
-rm -f malta.zip
-zip -r malta.zip .output discloud.config .env
-```
-No Windows: selecione os 3 itens **dentro** da pasta do projeto, clique com o botão
-direito → "Compactar". Nunca compacte a pasta do projeto inteira.
+**`O arquivo principal .output/server/index.mjs não foi encontrado dentro do zip`**
+- rodou `npm run build` em vez de `npm run build:discloud`; ou
+- o zip tem uma subpasta na raiz (`malta/discloud.config` em vez de `discloud.config`); ou
+- o compactador pulou `.output`/`.env` por serem itens ocultos.
 
-Atenção: `.output` e `.env` começam com ponto. No Windows ative
-"Exibir → Itens ocultos" no Explorer, senão você zipa sem eles e o erro volta.
+**`sh: 1: serve: Permission denied`**
+- faltava `package.json` no zip. Sem o script `start`, o Discloud cai no fallback
+  estático `serve`, que não existe no container. O `build:discloud` já grava esse
+  `package.json` dentro de `dist-discloud/` — basta zipar a pasta inteira.
 
-## 3. Variáveis de ambiente
-O `.env` já contém:
+**`Encontramos um erro dentro do arquivo discloud.config`**
+- falta o `ID`, chave com valor vazio, espaços em volta do `=`, acentos, BOM ou CRLF.
+
+## 4. Variáveis de ambiente
+Nada precisa ser cadastrado à mão no painel: o `.env` incluído no zip é lido como
+variáveis de ambiente. Ele contém:
 - VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY / VITE_SUPABASE_PROJECT_ID
 - SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY / SUPABASE_PROJECT_ID
 - SB_SERVICE_ROLE_KEY (somente servidor)
 
-As VITE_* são embutidas no build (passo 1), então precisam estar presentes na hora do
-build — se você rodar o build sem `.env`, o site sobe sem conexão com o banco.
+As `VITE_*` são embutidas no build (passo 1), então precisam existir **na hora do
+build**. As demais são lidas em runtime, no servidor — nunca vão para o bundle do front.
 
-## 4. Porta
-O servidor Node do Nitro usa `PORT` (padrão 3000). O Discloud define isso automaticamente para TYPE=site.
+## 5. Porta
+O servidor Node do Nitro usa `PORT` (padrão 3000). O Discloud define isso
+automaticamente para `TYPE=site`.
 
-## 5. Checklist antes de subir
+## 6. Checklist antes de subir
 - [ ] `npm run build:discloud` terminou com `[build:discloud] OK`
-- [ ] `.output/server/index.mjs` existe
-- [ ] `discloud.config` tem `MAIN=.output/server/index.mjs`
-- [ ] `discloud.config` tem `ID=` com o seu subdomínio real (não o placeholder)
-- [ ] zip com `discloud.config`, `.env` e `.output/` na raiz (sem subpasta)
-- [ ] `unzip -l malta.zip` mostra `.output/server/index.mjs` sem prefixo
+- [ ] nenhum `AVISO: nenhum .env encontrado`
+- [ ] `discloud.config` tem `ID=` com o subdomínio real (não o placeholder)
+- [ ] zip feito de **dentro** de `dist-discloud/`
+- [ ] `unzip -l malta.zip | head` mostra `discloud.config`, `package.json`, `.env` e
+      `.output/server/index.mjs` sem prefixo de pasta

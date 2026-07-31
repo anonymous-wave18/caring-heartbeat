@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Send, Loader2, UserPlus, Sparkles } from "lucide-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { fetchPublicProfiles, listPublicProfiles } from "@/lib/publicProfiles";
 
 export const Route = createFileRoute("/_authenticated/dashboard/social")({
   head: () => ({

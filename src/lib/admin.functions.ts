@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { botOnEvent } from "./discordBot.server";
 
 /**
  * Server-side audit log for sensitive document access. actor_id is derived
@@ -242,6 +243,11 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
       link: "/dashboard/formulario",
     });
 
+    // Gancho best-effort do bot: nunca derruba a aprovação.
+    if (data.status === "approved") {
+      await botOnEvent(supabase, userId, "form_approved", data.user_id);
+    }
+
     return { ok: true };
   });
 
@@ -295,6 +301,10 @@ export const reviewPayment = createServerFn({ method: "POST" })
         data.status === "approved" ? "Pagamento aprovado!" : "Pagamento marcado como pendente",
       link: "/dashboard/pagamentos",
     });
+
+    if (data.status === "approved") {
+      await botOnEvent(supabase, userId, "payment_approved", pay.user_id);
+    }
 
     return { ok: true };
   });

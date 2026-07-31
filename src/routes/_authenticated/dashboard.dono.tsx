@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Settings, ShieldCheck, ScrollText, Database, Users } from "lucide-react";
+import { Crown, Settings, ShieldCheck, ScrollText, Database, Users, Bot } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/dono")({
   ssr: false,
@@ -18,6 +18,7 @@ const TABS = [
   { to: "/dashboard/dono", label: "Configurações", icon: Settings, exact: true },
   { to: "/dashboard/dono/permissoes", label: "Permissões", icon: ShieldCheck, exact: false },
   { to: "/dashboard/dono/repasses", label: "Recrutadores", icon: Users, exact: false },
+  { to: "/dashboard/dono/discord-bot", label: "Bot Discord", icon: Bot, exact: false },
   { to: "/dashboard/dono/auditoria", label: "Auditoria", icon: ScrollText, exact: false },
   { to: "/dashboard/dono/database", label: "Banco de Dados", icon: Database, exact: false },
 ] as const;

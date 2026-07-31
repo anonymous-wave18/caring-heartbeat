@@ -31,7 +31,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 function createSupabaseAdminClient() {
   // Nunca colocar chaves aqui: os valores vêm apenas de variáveis de ambiente do servidor.
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SB_SERVICE_ROLE_KEY;
 

@@ -135,7 +135,7 @@ function AdminCargos() {
 
       {editing && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setEditing(null)}>
-          <div className="w-full max-w-lg rounded-lg bg-card p-6 ring-1 ring-border" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-card p-4 ring-1 ring-border sm:p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">{editing.id ? "Editar cargo" : "Novo cargo"}</h3>
               <button onClick={() => setEditing(null)}><X className="size-4" /></button>
@@ -154,7 +154,7 @@ function AdminCargos() {
                 <span className="text-sm font-medium">Descrição</span>
                 <input className="input" value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <label className="block space-y-1.5">
                   <span className="text-sm font-medium">Cor</span>
                   <input type="color" className="h-10 w-full rounded-md ring-1 ring-border bg-transparent"

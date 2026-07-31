@@ -164,12 +164,12 @@ function FormDetail({ form, onClose, onApprove, onReject }: {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-lg bg-card p-6 ring-1 ring-border max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Formulário — {form.profiles?.first_name} {form.profiles?.last_name}</h3>
-          <button onClick={onClose}><X className="size-4" /></button>
+      <div className="w-full max-w-2xl rounded-lg bg-card p-4 ring-1 ring-border max-h-[90vh] overflow-y-auto sm:p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="min-w-0 break-words text-base font-medium sm:text-lg">Formulário — {form.profiles?.first_name} {form.profiles?.last_name}</h3>
+          <button onClick={onClose} aria-label="Fechar" className="shrink-0"><X className="size-4" /></button>
         </div>
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <Info label="Vaga desejada" value={cargoName} />
           <Info label="Nome completo" value={form.full_name ?? "—"} />
           <Info label="Data de nascimento" value={form.birth_date ?? "—"} />

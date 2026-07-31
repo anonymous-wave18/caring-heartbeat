@@ -14,6 +14,23 @@ const OUT_DIR = "dist-discloud";
 const ZIP_NAME = "malta-discloud.zip";
 const cwd = process.cwd();
 
+// Sobe o server igual o Discloud faria e confere que ele responde HTTP.
+const SMOKE_SCRIPT = `
+const port = process.env.PORT;
+await import("./server.mjs");
+const deadline = Date.now() + 20000;
+let lastErr;
+while (Date.now() < deadline) {
+  try {
+    const res = await fetch("http://127.0.0.1:" + port + "/");
+    if (res.status > 0) { console.log("smoke ok", res.status); process.exit(0); }
+  } catch (err) { lastErr = err; }
+  await new Promise((r) => setTimeout(r, 500));
+}
+console.error("servidor nao respondeu na porta " + port + ": " + (lastErr?.message ?? "timeout"));
+process.exit(1);
+`;
+
 function fail(msg) {
   console.error(`\n[build:discloud] ERRO: ${msg}\n`);
   process.exit(1);

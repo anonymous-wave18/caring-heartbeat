@@ -78,14 +78,6 @@ function AdminPagamentos() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const sendTransferMut = useMutation({
-    mutationFn: async (id: string) => {
-      await sendTransfer({ data: { payment_id: id } });
-    },
-    onSuccess: () => { toast.success("Repasse enviado ao dono para conferência."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const generateAll = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.rpc("generate_weekly_payments_all");
@@ -192,9 +184,6 @@ function AdminPagamentos() {
                     <td className="px-4 py-2.5">{formatBRL(p.amount)}</td>
                     <td className="px-4 py-2.5">
                       <div>{p.status}</div>
-                      {p.transfer_status && p.transfer_status !== "none" && (
-                        <div className="text-[10px] text-muted-foreground">repasse: {p.transfer_status}</div>
-                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       {proof ? (
@@ -209,10 +198,6 @@ function AdminPagamentos() {
                         {p.status !== "approved" && (
                           <button title="Confirmar recebimento" onClick={() => reviewMut.mutate({ id: p.id, user_id: p.user_id, status: "approved" })}
                             className="rounded-md bg-primary/10 p-1.5 text-primary hover:bg-primary/20"><Check className="size-4" /></button>
-                        )}
-                        {p.status === "approved" && p.recruiter_admin_id === myId && (p.transfer_status === "none" || !p.transfer_status) && (
-                          <button title="Enviei o PIX ao dono" onClick={() => sendTransferMut.mutate(p.id)}
-                            className="rounded-md bg-amber-500/10 p-1.5 text-amber-500 hover:bg-amber-500/20"><Send className="size-4" /></button>
                         )}
                         {p.status === "approved" && (
                           <button title="Marcar como pendente" onClick={() => reviewMut.mutate({ id: p.id, user_id: p.user_id, status: "pending" })}

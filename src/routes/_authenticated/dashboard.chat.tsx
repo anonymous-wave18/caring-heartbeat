@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { fetchPublicProfiles } from "@/lib/publicProfiles";
 
 import { z } from "zod";
 
@@ -45,35 +46,10 @@ function useProfilesBasic(ids: string[]) {
     enabled: key.length > 0,
     staleTime: 60_000,
     queryFn: async () => {
-      const map = new Map<string, BasicProfile>();
-      // 1) tenta a RPC (rápida, já traz is_staff). Mesmo quando ela existe,
-      // fazemos merge com profiles abaixo porque alguns bancos externos estão
-      // com a RPC antiga e retornam avatar_url nulo/desatualizado.
-      const rpc = await supabase.rpc("get_profiles_basic", { _ids: key });
-      if (!rpc.error && rpc.data && rpc.data.length > 0) {
-        for (const r of rpc.data as BasicProfile[]) map.set(r.id, r);
-      }
-      // 2) profiles + user_roles sempre vencem para nome/foto atualizados manualmente no site.
-      const [{ data: profs }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("id, first_name, last_name, avatar_url, cargo_id, discord_username, email").in("id", key),
-        supabase.from("user_roles").select("user_id, role").in("user_id", key),
-      ]);
-      const staffSet = new Set(
-        (roles ?? []).filter((r: any) => r.role === "owner" || r.role === "admin").map((r: any) => r.user_id),
-      );
-      for (const p of profs ?? []) {
-        map.set(p.id, {
-          id: p.id,
-          first_name: p.first_name,
-          last_name: p.last_name,
-          avatar_url: p.avatar_url,
-          cargo_id: (p as any).cargo_id ?? null,
-          is_staff: staffSet.has(p.id),
-          discord_username: (p as any).discord_username ?? null,
-          email: (p as any).email ?? null,
-        });
-      }
-      return map;
+      // A tabela `profiles` agora é restrita (PII). O helper usa a RPC
+      // `get_profiles_basic` (campos públicos) e só complementa com o SELECT
+      // direto quando o usuário é staff e tem permissão de leitura.
+      return (await fetchPublicProfiles(key)) as Map<string, BasicProfile>;
     },
   });
 }

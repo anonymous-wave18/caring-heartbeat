@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Send, Loader2, UserPlus, Sparkles } from "lucide-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { fetchPublicProfiles, listPublicProfiles } from "@/lib/publicProfiles";
 
 export const Route = createFileRoute("/_authenticated/dashboard/social")({
   head: () => ({
@@ -56,14 +57,7 @@ function SocialFeed() {
         .limit(80);
       const rows = (posts ?? []) as any[];
       const ids = Array.from(new Set(rows.map((r) => r.user_id)));
-      const map = new Map<string, BasicProf>();
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id, first_name, last_name, avatar_url, discord_username, email")
-          .in("id", ids);
-        for (const p of profs ?? []) map.set(p.id, p as any);
-      }
+      const map = (await fetchPublicProfiles(ids)) as unknown as Map<string, BasicProf>;
       return rows.map((r) => ({ ...r, author: map.get(r.user_id) ?? null }));
     },
   });
@@ -74,12 +68,8 @@ function SocialFeed() {
     enabled: !!meId && followingIdsQ.data !== undefined,
     queryFn: async () => {
       const excluded = new Set([meId!, ...(followingIdsQ.data ?? [])]);
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name, avatar_url, discord_username, email, created_at")
-        .order("created_at", { ascending: false })
-        .limit(24);
-      return ((profs ?? []) as any[]).filter((p) => !excluded.has(p.id)).slice(0, 6);
+      const profs = await listPublicProfiles(24);
+      return (profs as any[]).filter((p) => !excluded.has(p.id)).slice(0, 6);
     },
   });
 
@@ -250,12 +240,7 @@ function FeedPost({ post, meId }: { post: any; meId: string | null }) {
         .select("id, body, created_at, user_id").eq("post_id", post.id).order("created_at");
       const rows = (data ?? []) as any[];
       const ids = Array.from(new Set(rows.map((r) => r.user_id)));
-      const map = new Map<string, any>();
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from("profiles").select("id, first_name, last_name, avatar_url, discord_username, email").in("id", ids);
-        for (const p of profs ?? []) map.set(p.id, p);
-      }
+      const map = await fetchPublicProfiles(ids);
       return rows.map((r) => ({ ...r, profile: map.get(r.user_id) }));
     },
   });

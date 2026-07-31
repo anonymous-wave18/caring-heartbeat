@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build:discloud": "NITRO_PRESET=node-server vite build"
+    "build:discloud": "node scripts/build-discloud.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

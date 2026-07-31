@@ -167,3 +167,72 @@ export async function getBotConfig(supabase: any) {
   for (const r of (map ?? []) as any[]) roleMap.set(r.cargo_id, r.discord_role_id);
   return { settings: settings ?? null, roleMap };
 }
+
+/**
+ * Gancho best-effort chamado por outras server functions (aprovação de
+ * formulário / pagamento). NÃO lança: uma falha do bot nunca pode derrubar
+ * um fluxo que já funciona hoje.
+ */
+export async function botOnEvent(
+  supabase: any,
+  actorId: string,
+  event: "form_approved" | "payment_approved",
+  targetUserId: string,
+) {
+  try {
+    const { settings, roleMap } = await getBotConfig(supabase);
+    if (!settings?.enabled || !settings.guild_id) return;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, discord_id, cargo_id")
+      .eq("id", targetUserId)
+      .maybeSingle();
+    if (!prof?.discord_id) return;
+
+    const roleId =
+      (prof.cargo_id ? roleMap.get(prof.cargo_id) : null) ?? settings.default_member_role_id ?? null;
+    if (roleId) {
+      await callBot("assign_role", { guild_id: settings.guild_id, discord_id: prof.discord_id, role_id: roleId });
+    }
+    if (event === "payment_approved" && settings.overdue_role_id) {
+      await callBot("remove_role", {
+        guild_id: settings.guild_id,
+        discord_id: prof.discord_id,
+        role_id: settings.overdue_role_id,
+      });
+    }
+
+    const key = event === "form_approved" ? "welcome" : "renewed";
+    const { data: msg } = await supabase
+      .from("discord_bot_messages")
+      .select("template")
+      .eq("key", key)
+      .maybeSingle();
+    if (msg?.template) {
+      const text = sanitizeMessage(
+        renderTemplate(msg.template, {
+          nome: [prof.first_name, prof.last_name].filter(Boolean).join(" ") || "membro",
+        }),
+      );
+      if (text) await callBot("send_dm", { discord_id: prof.discord_id, message: text });
+    }
+
+    await logBotActivity(supabase, {
+      actor_id: actorId,
+      action: `bot.auto_${event}`,
+      target_user_id: prof.id,
+      discord_id: prof.discord_id,
+      status: "success",
+    });
+  } catch (e: any) {
+    console.warn("[bot] gancho automático falhou", e?.message ?? e);
+    await logBotActivity(supabase, {
+      actor_id: actorId,
+      action: `bot.auto_${event}`,
+      target_user_id: targetUserId,
+      status: "error",
+      detail: { error: String(e?.message ?? e) },
+    });
+  }
+}

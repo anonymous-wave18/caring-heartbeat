@@ -38,7 +38,7 @@ function SecurityPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtrar por ação ou entidade…" className="input w-full pl-9" />
       </div>
-      <div className="rounded-xl bg-surface ring-1 ring-border overflow-hidden">
+      <div className="overflow-x-auto rounded-xl bg-surface ring-1 ring-border">
         {query.isLoading && <div className="p-6 text-center"><Loader2 className="inline size-4 animate-spin" /></div>}
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-surface-muted/50 text-xs uppercase text-muted-foreground">

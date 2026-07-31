@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { fetchPublicProfiles } from "@/lib/publicProfiles";
 
 import { z } from "zod";
 

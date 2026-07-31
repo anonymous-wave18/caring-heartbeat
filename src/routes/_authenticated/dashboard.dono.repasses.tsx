@@ -1,84 +1,94 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, X, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/useSiteSettings";
-import { reviewTransfer } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/dono/repasses")({
-  component: RepassesPage,
+  component: RecrutadoresPage,
 });
 
-function RepassesPage() {
-  const qc = useQueryClient();
+function RecrutadoresPage() {
   const q = useQuery({
-    queryKey: ["repasses"],
+    queryKey: ["recruiters-overview"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payments")
-        .select("*")
-        .in("transfer_status", ["pending", "confirmed"])
-        .order("approved_at", { ascending: false });
+      const { data: members, error } = await supabase
+        .from("profiles")
+        .select("id,first_name,last_name,email,status,recruited_by");
       if (error) throw error;
-      const rows = data ?? [];
-      const uids = Array.from(new Set(rows.flatMap((r: any) => [r.user_id, r.recruiter_admin_id].filter(Boolean))));
-      if (uids.length === 0) return rows;
-      const { data: profs } = await supabase.from("profiles").select("id,first_name,last_name,email").in("id", uids);
-      const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
-      return rows.map((r: any) => ({ ...r, member: map.get(r.user_id), recruiter: r.recruiter_admin_id ? map.get(r.recruiter_admin_id) : null }));
-    },
-  });
+      const rows = members ?? [];
 
-  const setStatus = useMutation({
-    mutationFn: async (args: { id: string; status: "confirmed" | "rejected" | "none" }) => {
-      await reviewTransfer({ data: { payment_id: args.id, status: args.status } });
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("user_id,amount,status,recruiter_admin_id");
+
+      const byId = new Map(rows.map((m: any) => [m.id, m]));
+      const recruiterIds = Array.from(
+        new Set(rows.map((m: any) => m.recruited_by).filter(Boolean))
+      ) as string[];
+
+      return recruiterIds.map((rid) => {
+        const rec = byId.get(rid);
+        const recruited = rows.filter((m: any) => m.recruited_by === rid);
+        const pays = (payments ?? []).filter(
+          (p: any) => p.recruiter_admin_id === rid || byId.get(p.user_id)?.recruited_by === rid
+        );
+        const paid = pays.filter((p: any) => p.status === "approved");
+        const open = pays.filter((p: any) => p.status !== "approved");
+        return {
+          id: rid,
+          name: rec ? `${rec.first_name ?? ""} ${rec.last_name ?? ""}`.trim() || rec.email : "—",
+          email: rec?.email ?? "",
+          total: recruited.length,
+          approved: recruited.filter((m: any) => m.status === "approved").length,
+          received: paid.reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0),
+          openCount: open.length,
+          openAmount: open.reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0),
+        };
+      }).sort((a, b) => b.total - a.total);
     },
-    onSuccess: () => { toast.success("Atualizado."); qc.invalidateQueries({ queryKey: ["repasses"] }); },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   if (q.isLoading) return <Loader2 className="size-5 animate-spin" />;
+  const data = q.data ?? [];
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-medium">Repasses dos recrutadores</h1>
-        <p className="text-sm text-muted-foreground">Confirme quando o admin enviar o PIX recebido dos membros.</p>
+        <h1 className="text-2xl font-medium">Recrutadores</h1>
+        <p className="text-sm text-muted-foreground">
+          Todos os membros pagam no PIX oficial do Dono. Aqui você acompanha quantos membros cada recrutador aprovou e quanto eles geraram.
+        </p>
       </div>
       <div className="overflow-x-auto rounded-lg bg-surface ring-1 ring-border">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-surface-muted text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Recrutador</th>
-              <th className="px-4 py-2 text-left">Membro</th>
-              <th className="px-4 py-2 text-left">Semana</th>
-              <th className="px-4 py-2 text-left">Valor</th>
-              <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-right">Ações</th>
+              <th className="px-4 py-2 text-left">Recrutados</th>
+              <th className="px-4 py-2 text-left">Aprovados</th>
+              <th className="px-4 py-2 text-left">Recebido</th>
+              <th className="px-4 py-2 text-left">Em aberto</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {(q.data ?? []).map((p: any) => (
-              <tr key={p.id} className="hover:bg-surface-muted/50">
-                <td className="px-4 py-2.5">{p.recruiter ? `${p.recruiter.first_name ?? ""} ${p.recruiter.last_name ?? ""}` : "—"}</td>
-                <td className="px-4 py-2.5">{p.member ? `${p.member.first_name ?? ""} ${p.member.last_name ?? ""}` : "—"}</td>
-                <td className="px-4 py-2.5">{p.week_start}</td>
-                <td className="px-4 py-2.5">{formatBRL(p.amount)}</td>
-                <td className="px-4 py-2.5">{p.transfer_status}</td>
-                <td className="px-4 py-2.5 text-right">
-                  <div className="flex justify-end gap-1">
-                    {p.transfer_status !== "confirmed" && (
-                      <button title="Confirmar repasse" onClick={() => setStatus.mutate({ id: p.id, status: "confirmed" })}
-                        className="rounded-md bg-primary/10 p-1.5 text-primary hover:bg-primary/20"><Check className="size-4" /></button>
-                    )}
-                    <button title="Rejeitar" onClick={() => setStatus.mutate({ id: p.id, status: "rejected" })}
-                      className="rounded-md bg-destructive/10 p-1.5 text-destructive hover:bg-destructive/20"><X className="size-4" /></button>
-                  </div>
+            {data.map((r) => (
+              <tr key={r.id} className="hover:bg-surface-muted/50">
+                <td className="px-4 py-2.5">
+                  {r.name}
+                  <div className="text-xs text-muted-foreground">{r.email}</div>
+                </td>
+                <td className="px-4 py-2.5">{r.total}</td>
+                <td className="px-4 py-2.5">{r.approved}</td>
+                <td className="px-4 py-2.5 text-success">{formatBRL(r.received)}</td>
+                <td className="px-4 py-2.5 text-warning">
+                  {formatBRL(r.openAmount)}
+                  <span className="ml-1 text-xs text-muted-foreground">({r.openCount})</span>
                 </td>
               </tr>
             ))}
-            {q.data && q.data.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum repasse pendente.</td></tr>
+            {data.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhum recrutador com membros ainda.</td></tr>
             )}
           </tbody>
         </table>

@@ -5,12 +5,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Bot, Loader2, AlertCircle, RefreshCw, Save, Send, ShieldCheck, ShieldX,
-  Search, Inbox, CheckCircle2, XCircle, Download,
+  Search, Inbox, CheckCircle2, XCircle, Download, PlugZap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getBotStatus, saveBotSettings, saveRoleMap, saveBotMessages,
   assignDiscordRole, removeDiscordRole, sendDiscordDm, syncDiscordUser,
+  testBotConnection,
 } from "@/lib/discordBot.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,11 +78,27 @@ function StateBlock({
 
 function DiscordBotPanel() {
   const [tab, setTab] = useState<"config" | "membros" | "logs">("config");
+  const qcRoot = useQueryClient();
   const statusFn = useServerFn(getBotStatus);
   const status = useQuery({
     queryKey: ["bot-status"],
     queryFn: () => statusFn({ data: undefined as any }),
     retry: false,
+  });
+
+  const testFn = useServerFn(testBotConnection);
+  const test = useMutation({
+    mutationFn: async () => {
+      const res = await testFn({ data: undefined as any });
+      return res;
+    },
+    onSuccess: (res) => {
+      if (res.ok) toast.success(`Bot respondeu em ${res.latencyMs}ms.`);
+      else toast.error(res.error ?? "Bot não respondeu.");
+      qcRoot.invalidateQueries({ queryKey: ["bot-status"] });
+      qcRoot.invalidateQueries({ queryKey: ["bot-logs"] });
+    },
+    onError: (e) => toast.error(errMsg(e)),
   });
 
   return (
@@ -109,11 +126,64 @@ function DiscordBotPanel() {
           <Badge variant={status.data?.secrets?.sharedSecret ? "outline" : "destructive"}>
             secret {status.data?.secrets?.sharedSecret ? "ok" : "ausente"}
           </Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={test.isPending}
+            onClick={() => { if (!test.isPending) test.mutate(); }}
+          >
+            {test.isPending
+              ? <><Loader2 className="mr-2 size-3.5 animate-spin" />Testando…</>
+              : <><PlugZap className="mr-2 size-3.5" />Testar conexão</>}
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => status.refetch()}>
             <RefreshCw className="size-3.5" />
           </Button>
         </div>
       </div>
+
+      {test.isPending ? (
+        <div className="flex items-center gap-2 rounded-lg border bg-surface p-3 text-xs text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Testando conectividade com o bot…
+        </div>
+      ) : test.isError ? (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs">
+          <XCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+          <div>
+            <p className="font-medium text-destructive">Falha ao executar o teste</p>
+            <p className="text-muted-foreground">{errMsg(test.error)}</p>
+          </div>
+        </div>
+      ) : test.data ? (
+        test.data.ok ? (
+          <div className="flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+            <div>
+              <p className="font-medium">Conexão OK — bot respondeu em {test.data.latencyMs}ms</p>
+              <p className="text-muted-foreground">
+                Testado às {new Date(test.data.checkedAt).toLocaleString("pt-BR")} · registrado nos logs
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs">
+            <XCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <div>
+              <p className="font-medium text-destructive">Conexão falhou</p>
+              <p className="text-muted-foreground">{test.data.error ?? "Motivo não informado pelo bot."}</p>
+              <p className="text-muted-foreground">
+                Testado às {new Date(test.data.checkedAt).toLocaleString("pt-BR")} · registrado nos logs
+              </p>
+            </div>
+          </div>
+        )
+      ) : (
+        <div className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+          <PlugZap className="size-4" />
+          Nenhum teste de conexão executado ainda.
+        </div>
+      )}
 
       {!status.isLoading && !status.isError && !status.data?.secrets?.apiUrl && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs">

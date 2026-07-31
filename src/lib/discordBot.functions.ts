@@ -29,6 +29,46 @@ export const getBotStatus = createServerFn({ method: "POST" })
     return { secrets, online: res.ok, error: res.ok ? null : res.error };
   });
 
+/** Teste manual de conectividade: faz ping real, grava no log e devolve latência/motivo. */
+export const testBotConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context as { supabase: any; userId: string };
+    await assertOwner(supabase, userId);
+    const checkedAt = new Date().toISOString();
+    const secrets = botSecretsConfigured();
+
+    if (!secrets.apiUrl || !secrets.sharedSecret) {
+      const missing = [
+        !secrets.apiUrl ? "DISCORD_BOT_API_URL" : null,
+        !secrets.sharedSecret ? "DISCORD_BOT_SHARED_SECRET" : null,
+      ].filter(Boolean).join(" e ");
+      const error = `Secrets ausentes no servidor: ${missing}.`;
+      await logBotActivity(supabase, {
+        actor_id: userId,
+        action: "bot.connection_test",
+        status: "error",
+        detail: { error, latency_ms: 0 },
+      });
+      return { ok: false as const, latencyMs: 0, error, checkedAt, secrets };
+    }
+
+    const res = await callBot("ping", {}, 8000);
+    await logBotActivity(supabase, {
+      actor_id: userId,
+      action: "bot.connection_test",
+      status: res.ok ? "success" : "error",
+      detail: { latency_ms: res.latencyMs, error: res.ok ? null : res.error },
+    });
+    return {
+      ok: res.ok,
+      latencyMs: res.latencyMs,
+      error: res.ok ? null : res.error,
+      checkedAt,
+      secrets,
+    };
+  });
+
 export const saveBotSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>

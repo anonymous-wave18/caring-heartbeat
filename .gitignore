@@ -39,3 +39,4 @@ dist-ssr
 # Discloud (pacote de deploy)
 dist-discloud/
 malta.zip
+malta-discloud.zip

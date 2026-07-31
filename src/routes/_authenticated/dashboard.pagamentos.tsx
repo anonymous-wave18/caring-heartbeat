@@ -26,25 +26,6 @@ function PagamentosPage() {
     },
   });
 
-  const meProfQ = useQuery({
-    queryKey: ["me-recruiter", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("recruited_by").eq("id", userId!).maybeSingle();
-      return data;
-    },
-  });
-  const recruiterId = meProfQ.data?.recruited_by ?? null;
-
-  const recruiterPixQ = useQuery({
-    queryKey: ["recruiter-pix", recruiterId],
-    enabled: !!recruiterId,
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("first_name,last_name,pix_key,pix_key_type,pix_beneficiary").eq("id", recruiterId!).maybeSingle();
-      return data;
-    },
-  });
-
   const proofsQ = useQuery({
     queryKey: ["my-proofs", userId],
     enabled: !!userId,
@@ -88,13 +69,10 @@ function PagamentosPage() {
   const settings = settingsQ.data;
   const payments = paymentsQ.data ?? [];
   const current = payments[0];
-  const rp = recruiterPixQ.data;
-  // Prefer recruiter's PIX; fallback to site default
-  const pix = rp?.pix_key
-    ? { key: rp.pix_key, key_type: rp.pix_key_type, beneficiary: rp.pix_beneficiary ?? `${rp.first_name ?? ""} ${rp.last_name ?? ""}`.trim(), source: "recrutador" as const }
-    : settings?.pix_key
-      ? { key: settings.pix_key, key_type: settings.pix_key_type, beneficiary: settings.pix_beneficiary, source: "site" as const }
-      : null;
+  // PIX único e oficial da organização (definido pelo Dono)
+  const pix = settings?.pix_key
+    ? { key: settings.pix_key, key_type: settings.pix_key_type, beneficiary: settings.pix_beneficiary }
+    : null;
   const now = new Date();
   const daysLeft = current ? Math.ceil((new Date(current.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
 
@@ -141,7 +119,7 @@ function PagamentosPage() {
               <div className="flex items-center justify-between">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Dados do PIX</div>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/30">
-                  {pix.source === "recrutador" ? "PIX do seu recrutador" : "PIX oficial"}
+                  PIX oficial
                 </span>
               </div>
               <div className="grid gap-2 text-sm sm:grid-cols-2">
@@ -159,23 +137,6 @@ function PagamentosPage() {
             <div className="text-sm text-warning">Comprovante enviado. Aguardando aprovação da administração.</div>
           )}
         </div>
-      )}
-
-      {/* Seção Repasse (Apenas para Admins/Recrutadores) */}
-      {rp && (
-        <section className="rounded-lg bg-surface p-6 ring-1 ring-border space-y-4 border-l-4 border-primary">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">💰 Enviar Repasse (PIX)</h2>
-            <span className="text-xs text-muted-foreground">Envie o PIX para o Dono após receber de seus recrutados</span>
-          </div>
-          <div className="rounded-md bg-background/50 p-4 text-sm space-y-2">
-            <p>Se você recebeu o pagamento de seus recrutados, realize o repasse para a chave do Dono e anexe o comprovante abaixo.</p>
-            <div className="mt-2 text-xs font-mono text-primary bg-primary/5 p-2 rounded">
-              Chave PIX Dono (Exemplo): cnpj 00.000.000/0001-00
-            </div>
-          </div>
-          <UploadProofButton onFile={(f) => toast.info("Funcionalidade de Repasse sendo processada pelo Dono.")} pending={false} />
-        </section>
       )}
 
       <section className="rounded-lg bg-surface ring-1 ring-border">

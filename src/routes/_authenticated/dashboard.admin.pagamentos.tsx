@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Check, X, Download, Search, Send } from "lucide-react";
+import { Loader2, Check, X, Download, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/useSiteSettings";
-import { reviewPayment, sendTransfer } from "@/lib/admin.functions";
+import { reviewPayment } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/admin/pagamentos")({
   component: AdminPagamentos,
@@ -75,14 +75,6 @@ function AdminPagamentos() {
       await reviewPayment({ data: { payment_id: args.id, status: args.status } });
     },
     onSuccess: () => { toast.success("Atualizado."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const sendTransferMut = useMutation({
-    mutationFn: async (id: string) => {
-      await sendTransfer({ data: { payment_id: id } });
-    },
-    onSuccess: () => { toast.success("Repasse enviado ao dono para conferência."); qc.invalidateQueries({ queryKey: ["admin-payments"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -192,9 +184,6 @@ function AdminPagamentos() {
                     <td className="px-4 py-2.5">{formatBRL(p.amount)}</td>
                     <td className="px-4 py-2.5">
                       <div>{p.status}</div>
-                      {p.transfer_status && p.transfer_status !== "none" && (
-                        <div className="text-[10px] text-muted-foreground">repasse: {p.transfer_status}</div>
-                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       {proof ? (
@@ -209,10 +198,6 @@ function AdminPagamentos() {
                         {p.status !== "approved" && (
                           <button title="Confirmar recebimento" onClick={() => reviewMut.mutate({ id: p.id, user_id: p.user_id, status: "approved" })}
                             className="rounded-md bg-primary/10 p-1.5 text-primary hover:bg-primary/20"><Check className="size-4" /></button>
-                        )}
-                        {p.status === "approved" && p.recruiter_admin_id === myId && (p.transfer_status === "none" || !p.transfer_status) && (
-                          <button title="Enviei o PIX ao dono" onClick={() => sendTransferMut.mutate(p.id)}
-                            className="rounded-md bg-amber-500/10 p-1.5 text-amber-500 hover:bg-amber-500/20"><Send className="size-4" /></button>
                         )}
                         {p.status === "approved" && (
                           <button title="Marcar como pendente" onClick={() => reviewMut.mutate({ id: p.id, user_id: p.user_id, status: "pending" })}

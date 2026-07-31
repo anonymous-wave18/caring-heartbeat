@@ -6,6 +6,7 @@ import { Loader2, Upload, KeyRound, Save, Trophy, Send, Trash2, Heart, MessageCi
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAvatarUrl } from "@/lib/useAvatarUrl";
+import { fetchPublicProfile } from "@/lib/publicProfiles";
 import { useRoles, computeRoleFlags } from "@/lib/useRoles";
 import type { Profile } from "./dashboard";
 
@@ -27,9 +28,14 @@ function PerfilPage() {
   const profileQuery = useQuery({
     queryKey: ["profile", viewId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", viewId).single();
-      if (error) throw error;
-      return data as Profile;
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", viewId).maybeSingle();
+      if (data) return data as Profile;
+      if (isViewingSelf && error) throw error;
+      // Perfil de outro membro: `profiles` é restrita (PII), então usamos a
+      // RPC pública que devolve só nome, foto, cargo e Discord.
+      const basic = await fetchPublicProfile(viewId);
+      if (!basic) throw error ?? new Error("Perfil não encontrado.");
+      return basic as unknown as Profile;
     },
   });
 

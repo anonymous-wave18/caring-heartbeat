@@ -1,5 +1,27 @@
 # Deploy no Discloud
 
+## 0. O arquivo `discloud.config`
+Para hospedar **site**, o Discloud identifica a aplicação pelo campo `ID`, que é o
+**subdomínio** criado no painel (ex.: `ID=malta` → `malta.discloud.app`).
+
+```text
+ID=SEU-SUBDOMINIO
+TYPE=site
+MAIN=.output/server/index.mjs
+RAM=512
+VERSION=latest
+AUTORESTART=true
+```
+
+Troque `SEU-SUBDOMINIO` pelo subdomínio real (só a parte antes de `.discloud.app`).
+
+> Erro `Encontramos um erro dentro do arquivo discloud.config` quase sempre é:
+> - falta do campo `ID` (ou uso de `NAME` no lugar dele em `TYPE=site`);
+> - chave declarada com valor vazio (`AVATAR=`, `APT=`) — omita a linha em vez de deixar vazia;
+> - espaços em volta do `=`, acentos, ou arquivo salvo com BOM / final de linha CRLF.
+>
+> Salve sempre em UTF-8 sem BOM, uma chave por linha, sem espaços.
+
 > Erro `O arquivo principal .output/server/index.mjs não foi encontrado dentro do zip`
 > significa uma de duas coisas: (a) você zipou o projeto sem rodar o build, ou
 > (b) o zip tem uma subpasta na raiz. Siga os passos abaixo exatamente.
@@ -64,4 +86,5 @@ O servidor Node do Nitro usa `PORT` (padrão 3000). O Discloud define isso autom
 - [ ] `npm run build:discloud` terminou sem erro
 - [ ] `.output/server/index.mjs` existe
 - [ ] `discloud.config` tem `MAIN=.output/server/index.mjs`
+- [ ] `discloud.config` tem `ID=` com o seu subdomínio real (não o placeholder)
 - [ ] zip com `discloud.config`, `.env` e `.output/` na raiz (sem subpasta)

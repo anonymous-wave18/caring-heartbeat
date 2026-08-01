@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { botOnEvent } from "./discordBot.server";
+import { assertStaff } from "./authz.server";
 
 /**
  * Server-side audit log for sensitive document access. actor_id is derived
@@ -23,8 +24,7 @@ export const logDocumentAccess = createServerFn({ method: "POST" })
     const { supabase, userId } = context as { supabase: any; userId: string };
 
     // Only staff (admin/owner) may log a document view; otherwise ignore.
-    const { data: isStaff } = await supabase.rpc("is_staff", { _user_id: userId });
-    if (!isStaff) throw new Error("Forbidden");
+    await assertStaff(supabase, userId);
 
     const { error } = await supabase.from("audit_log").insert({
       actor_id: userId,
@@ -53,8 +53,7 @@ export const signDocumentUrl = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context as { supabase: any; userId: string };
-    const { data: isStaff } = await supabase.rpc("is_staff", { _user_id: userId });
-    if (!isStaff) throw new Error("Forbidden");
+    await assertStaff(supabase, userId);
 
     const { data: signed, error } = await supabase.storage
       .from("documents")
@@ -78,8 +77,7 @@ export const broadcastAnnouncement = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context as { supabase: any; userId: string };
-    const { data: isStaff } = await supabase.rpc("is_staff", { _user_id: userId });
-    if (!isStaff) throw new Error("Forbidden");
+    await assertStaff(supabase, userId);
 
     const { data: ann, error: annErr } = await supabase
       .from("announcements")
@@ -148,8 +146,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context as { supabase: any; userId: string };
-    const { data: isStaff } = await supabase.rpc("is_staff", { _user_id: userId });
-    if (!isStaff) throw new Error("Forbidden");
+    await assertStaff(supabase, userId);
 
     const { data: fdata, error: fErr } = await supabase
       .from("recruitment_forms")
@@ -164,7 +161,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
     if (fErr) throw new Error(fErr.message);
     if (!fdata) throw new Error("Formulário não encontrado");
 
-    if (data.status === "approved" && fdata.cargo_desejado_id) {
+    if (data.status === "approved") {
       const { data: formDetails } = await supabase
         .from("recruitment_forms")
         .select("*")
@@ -173,7 +170,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
       const { data: cargoData } = await supabase
         .from("cargos")
         .select("*")
-        .eq("id", fdata.cargo_desejado_id)
+        .eq("id", fdata.cargo_desejado_id ?? "00000000-0000-0000-0000-000000000000")
         .maybeSingle();
 
       const fullName = (formDetails?.full_name || "").trim();
@@ -190,7 +187,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
       const { error: pErr } = await supabase
         .from("profiles")
         .update({
-          cargo_id: fdata.cargo_desejado_id,
+          ...(fdata.cargo_desejado_id ? { cargo_id: fdata.cargo_desejado_id } : {}),
           recruited_by: userId,
           form_status: "approved",
           status: "approved",
@@ -267,8 +264,7 @@ export const reviewPayment = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context as { supabase: any; userId: string };
-    const { data: isStaff } = await supabase.rpc("is_staff", { _user_id: userId });
-    if (!isStaff) throw new Error("Forbidden");
+    await assertStaff(supabase, userId);
 
     const { data: pay } = await supabase
       .from("payments")

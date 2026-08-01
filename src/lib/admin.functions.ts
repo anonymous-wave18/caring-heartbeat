@@ -161,7 +161,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
     if (fErr) throw new Error(fErr.message);
     if (!fdata) throw new Error("Formulário não encontrado");
 
-    if (data.status === "approved" && fdata.cargo_desejado_id) {
+    if (data.status === "approved") {
       const { data: formDetails } = await supabase
         .from("recruitment_forms")
         .select("*")
@@ -170,7 +170,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
       const { data: cargoData } = await supabase
         .from("cargos")
         .select("*")
-        .eq("id", fdata.cargo_desejado_id)
+        .eq("id", fdata.cargo_desejado_id ?? "00000000-0000-0000-0000-000000000000")
         .maybeSingle();
 
       const fullName = (formDetails?.full_name || "").trim();
@@ -187,7 +187,7 @@ export const reviewRecruitmentForm = createServerFn({ method: "POST" })
       const { error: pErr } = await supabase
         .from("profiles")
         .update({
-          cargo_id: fdata.cargo_desejado_id,
+          ...(fdata.cargo_desejado_id ? { cargo_id: fdata.cargo_desejado_id } : {}),
           recruited_by: userId,
           form_status: "approved",
           status: "approved",
